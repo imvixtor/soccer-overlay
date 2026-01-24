@@ -57,7 +57,6 @@ const router = createBrowserRouter([
                 hydrateFallbackElement: <LoadingPage />,
             },
             {
-                index: true,
                 path: 'control',
                 lazy: () =>
                     import('./page/admin/MatchControl.tsx').then((module) => ({
