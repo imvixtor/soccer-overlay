@@ -19,6 +19,14 @@ const router = createBrowserRouter([
             })),
         hydrateFallbackElement: <LoadingPage />,
     },
+    {
+        path: '/auth/sign-up',
+        lazy: () =>
+            import('./page/auth/sign-up.tsx').then((module) => ({
+                Component: module.default,
+            })),
+        hydrateFallbackElement: <LoadingPage />,
+    },
 ]);
 
 createRoot(document.getElementById('root')!).render(

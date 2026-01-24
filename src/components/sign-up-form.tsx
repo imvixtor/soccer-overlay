@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 export function SignUpForm({
     className,
@@ -83,7 +84,7 @@ export function SignUpForm({
                                     <Input
                                         id="email"
                                         type="email"
-                                        placeholder="m@example.com"
+                                        placeholder="email@example.com"
                                         required
                                         value={email}
                                         onChange={(e) =>
@@ -128,24 +129,38 @@ export function SignUpForm({
                                         {error}
                                     </p>
                                 )}
-                                <Button
-                                    type="submit"
-                                    className="w-full"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading
-                                        ? 'Creating an account...'
-                                        : 'Sign up'}
-                                </Button>
+                                <div>
+                                    <Button
+                                        type="submit"
+                                        className="w-full"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading
+                                            ? 'Creating an account...'
+                                            : 'Sign up'}
+                                    </Button>
+                                    <Link
+                                        to="/"
+                                        className="inline-block w-full mt-2"
+                                    >
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="gap-2 w-full"
+                                        >
+                                            Home
+                                        </Button>
+                                    </Link>
+                                </div>
                             </div>
                             <div className="mt-4 text-center text-sm">
                                 Already have an account?{' '}
-                                <a
-                                    href="/login"
+                                <Link
+                                    to="/auth/login"
                                     className="underline underline-offset-4"
                                 >
                                     Login
-                                </a>
+                                </Link>
                             </div>
                         </form>
                     </CardContent>
