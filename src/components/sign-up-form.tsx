@@ -68,6 +68,15 @@ export function SignUpForm({
                             email to confirm your account before signing in. You
                             can close this tab now.
                         </p>
+                        <Link to="/" className="inline-block w-full mt-2">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="gap-2 w-full"
+                            >
+                                Home
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
             ) : (

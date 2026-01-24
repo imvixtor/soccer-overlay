@@ -21,6 +21,7 @@ export function ForgotPasswordForm({
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const clientUrl = import.meta.env.CLIENT_URL!;
 
     const handleForgotPassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,7 +31,7 @@ export function ForgotPasswordForm({
         try {
             // The url which will be included in the email. This URL needs to be configured in your redirect URLs in the Supabase dashboard at https://supabase.com/dashboard/project/_/auth/url-configuration
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: 'http://localhost:3000/update-password',
+                redirectTo: `${clientUrl}/auth/update-password`,
             });
             if (error) throw error;
             setSuccess(true);
@@ -58,8 +59,18 @@ export function ForgotPasswordForm({
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
                             If you registered using your email and password, you
-                            will receive a password reset email.
+                            will receive a password reset email. You can close
+                            this tab and check your inbox.
                         </p>
+                        <Link to="/" className="inline-block w-full mt-2">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="gap-2 w-full"
+                            >
+                                Home
+                            </Button>
+                        </Link>
                     </CardContent>
                 </Card>
             ) : (
@@ -94,15 +105,29 @@ export function ForgotPasswordForm({
                                         {error}
                                     </p>
                                 )}
-                                <Button
-                                    type="submit"
-                                    className="w-full"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading
-                                        ? 'Sending...'
-                                        : 'Send reset email'}
-                                </Button>
+                                <div>
+                                    <Button
+                                        type="submit"
+                                        className="w-full"
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading
+                                            ? 'Sending...'
+                                            : 'Send reset email'}
+                                    </Button>
+                                    <Link
+                                        to="/"
+                                        className="inline-block w-full mt-2"
+                                    >
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="gap-2 w-full"
+                                        >
+                                            Home
+                                        </Button>
+                                    </Link>
+                                </div>
                             </div>
                             <div className="mt-4 text-center text-sm">
                                 Already have an account?{' '}
