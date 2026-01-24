@@ -61,20 +61,21 @@ function App() {
                         tiếp, thông tin đội bóng và nhiều tính năng mạnh mẽ
                         khác.
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
                         <Link to="/admin">
                             <Button size="lg" className="text-lg px-8">
                                 Bảng điều khiển
-                                <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>
                         </Link>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            className="text-lg px-8"
-                        >
-                            Xem demo
-                        </Button>
+                        <a href="#">
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="text-lg px-8"
+                            >
+                                Xem demo
+                            </Button>
+                        </a>
                     </div>
                 </div>
             </section>
