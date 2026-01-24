@@ -35,6 +35,14 @@ const router = createBrowserRouter([
             })),
         hydrateFallbackElement: <LoadingPage />,
     },
+    {
+        path: '/auth/update-password',
+        lazy: () =>
+            import('./page/auth/update-password.tsx').then((module) => ({
+                Component: module.default,
+            })),
+        hydrateFallbackElement: <LoadingPage />,
+    },
 ]);
 
 createRoot(document.getElementById('root')!).render(
