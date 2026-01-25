@@ -4,8 +4,10 @@ import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import './index.css';
 import App from './App.tsx';
-import AdminLayout from './layouts/AdminLayout.tsx';
+import AdminLayout from './page/layouts/AdminLayout.tsx';
 import LoadingPage from './page/loading.tsx';
+import { authMiddleware } from './middlewares/auth.middleware.tsx';
+import { userLoader } from './services/user.loader.tsx';
 
 const router = createBrowserRouter([
     {
@@ -46,10 +48,12 @@ const router = createBrowserRouter([
     },
     {
         path: '/admin',
+        middleware: [authMiddleware],
         element: <AdminLayout />,
         children: [
             {
                 index: true,
+                loader: userLoader,
                 lazy: () =>
                     import('./page/admin/Account.tsx').then((module) => ({
                         Component: module.default,
