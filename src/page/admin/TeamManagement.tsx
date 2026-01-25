@@ -1,30 +1,31 @@
 import { useLoaderData, useRevalidator, useSearchParams } from 'react-router';
-import { useRef, useState, useEffect } from 'react';
-import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase';
-import { supabase } from '@/lib/supabase/client';
+import { useRef, useState, useCallback } from 'react';
+import type { TablesInsert, TablesUpdate } from '@/types/supabase';
+import type { TeamsLoaderData } from '@/types/loader';
+import type { Tables } from '@/types/supabase';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Upload, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseCSV } from '@/lib/parse-csv';
+import { getErrorMessage } from '@/lib/error-utils';
+import { downloadCsv } from '@/lib/download';
+import { parseTeamsCsv, TEAMS_CSV_TEMPLATE } from '@/lib/csv/teams';
 import { AddFab } from '@/components/admin/AddFab';
+import { CsvImportBlock } from '@/components/admin/CsvImportBlock';
 import { DeleteConfirmDialog } from '@/components/admin/DeleteConfirmDialog';
 import { EntityListCard } from '@/components/admin/EntityListCard';
 import { PaginationBar } from '@/components/admin/PaginationBar';
+import { usePaginationRedirect } from '@/hooks/usePaginationRedirect';
+import { useImportSuccessFlash } from '@/hooks/useImportSuccessFlash';
+import * as teamsApi from '@/services/teams.api';
 
 type TeamRow = Tables<'teams'>;
 
 export default function TeamManagementPage() {
-    const { teams, totalCount, totalPages, page, user } = useLoaderData() as {
-        teams: TeamRow[];
-        totalCount: number;
-        totalPages: number;
-        page: number;
-        user: { id: string } | null;
-    };
+    const { teams, totalCount, totalPages, page, user } =
+        useLoaderData() as TeamsLoaderData;
     const { revalidate } = useRevalidator();
     const [, setSearchParams] = useSearchParams();
     const dialogRef = useRef<HTMLDialogElement>(null);
@@ -47,17 +48,17 @@ export default function TeamManagementPage() {
 
     const currentPage = Math.min(page, totalPages);
 
-    useEffect(() => {
-        if (totalPages >= 1 && page > totalPages) {
-            setSearchParams({ page: String(totalPages) }, { replace: true });
-        }
-    }, [totalPages, page, setSearchParams]);
+    usePaginationRedirect(page, totalPages);
+    useImportSuccessFlash(
+        importSuccess,
+        useCallback(() => setImportSuccess(null), []),
+    );
 
-    useEffect(() => {
-        if (importSuccess === null) return;
-        const t = setTimeout(() => setImportSuccess(null), 4000);
-        return () => clearTimeout(t);
-    }, [importSuccess]);
+    const closeDialog = useCallback(() => dialogRef.current?.close(), []);
+    const clearImportFlash = useCallback(() => {
+        setImportError(null);
+        setImportSuccess(null);
+    }, []);
 
     const openAdd = () => {
         setEditing(null);
@@ -65,8 +66,7 @@ export default function TeamManagementPage() {
         setShortName('');
         setCoach('');
         setError(null);
-        setImportError(null);
-        setImportSuccess(null);
+        clearImportFlash();
         dialogRef.current?.showModal();
     };
 
@@ -77,10 +77,6 @@ export default function TeamManagementPage() {
         setCoach(t.coach ?? '');
         setError(null);
         dialogRef.current?.showModal();
-    };
-
-    const closeDialog = () => {
-        dialogRef.current?.close();
     };
 
     const openDeleteConfirm = (t: TeamRow) => {
@@ -98,18 +94,11 @@ export default function TeamManagementPage() {
         setIsDeleting(true);
         setDeleteError(null);
         try {
-            const { error: err } = await supabase
-                .from('teams')
-                .delete()
-                .eq('id', deletingTeam.id)
-                .eq('user_id', user.id);
-            if (err) throw err;
+            await teamsApi.deleteTeam(deletingTeam.id, user.id);
             closeDeleteDialog();
             revalidate();
-        } catch (x) {
-            setDeleteError(
-                x instanceof Error ? x.message : 'Something went wrong',
-            );
+        } catch (e) {
+            setDeleteError(getErrorMessage(e));
         } finally {
             setIsDeleting(false);
         }
@@ -118,67 +107,38 @@ export default function TeamManagementPage() {
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !user) return;
+        e.target.value = '';
         setImportError(null);
         setImportSuccess(null);
         setIsImporting(true);
-        e.target.value = '';
-
         try {
             const text = await file.text();
-            const rows = parseCSV(text);
-            const isHeader =
-                rows[0] &&
-                /^(name|short_name|short name|coach)$/i.test(
-                    String(rows[0][0] ?? '').trim(),
-                );
-            const data = (isHeader ? rows.slice(1) : rows)
-                .filter((r) => (r[0]?.trim() ?? '') && (r[1]?.trim() ?? ''))
-                .map(
-                    (r): TablesInsert<'teams'> => ({
-                        user_id: user.id,
-                        name: String(r[0] ?? '').trim(),
-                        short_name: String(r[1] ?? '').trim(),
-                        coach: (r[2]?.trim() ?? '') || null,
-                    }),
-                );
-
+            const data = parseTeamsCsv(text, user.id);
             if (data.length === 0) {
                 setImportError(
                     'No valid rows. Each row needs name and short_name.',
                 );
                 return;
             }
-
-            const { error: err } = await supabase.from('teams').insert(data);
-            if (err) throw err;
+            await teamsApi.importTeams(data);
             setImportSuccess(data.length);
             revalidate();
             closeDialog();
-        } catch (x) {
-            setImportError(x instanceof Error ? x.message : 'Import failed.');
+        } catch (e) {
+            setImportError(getErrorMessage(e, 'Import failed.'));
         } finally {
             setIsImporting(false);
         }
     };
 
-    const handleDownloadTemplate = () => {
-        const csv =
-            'name,short_name,coach\nManchester United,MUN,Alex Ferguson\nReal Madrid,RMA,\n';
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'teams-template.csv';
-        a.click();
-        URL.revokeObjectURL(url);
-    };
+    const handleDownloadTemplate = () =>
+        downloadCsv(TEAMS_CSV_TEMPLATE, 'teams-template.csv');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
         setError(null);
         setIsSubmitting(true);
-
         try {
             if (editing) {
                 const patch: TablesUpdate<'teams'> = {
@@ -186,12 +146,7 @@ export default function TeamManagementPage() {
                     short_name: shortName.trim(),
                     coach: coach.trim() || null,
                 };
-                const { error: err } = await supabase
-                    .from('teams')
-                    .update(patch)
-                    .eq('id', editing.id)
-                    .eq('user_id', user.id);
-                if (err) throw err;
+                await teamsApi.updateTeam(editing.id, user.id, patch);
             } else {
                 const row: TablesInsert<'teams'> = {
                     user_id: user.id,
@@ -199,13 +154,12 @@ export default function TeamManagementPage() {
                     short_name: shortName.trim(),
                     coach: coach.trim() || null,
                 };
-                const { error: err } = await supabase.from('teams').insert(row);
-                if (err) throw err;
+                await teamsApi.createTeam(row);
             }
             closeDialog();
             revalidate();
-        } catch (x) {
-            setError(x instanceof Error ? x.message : 'Something went wrong');
+        } catch (e) {
+            setError(getErrorMessage(e));
         } finally {
             setIsSubmitting(false);
         }
@@ -224,7 +178,7 @@ export default function TeamManagementPage() {
             ) : (
                 <>
                     <ul className="flex flex-col gap-3">
-                        {teams.map((t: TeamRow) => (
+                        {teams.map((t) => (
                             <li key={t.id}>
                                 <EntityListCard
                                     title={t.name}
@@ -248,14 +202,10 @@ export default function TeamManagementPage() {
                         totalCount={totalCount}
                         itemLabel="team"
                         onPrev={() =>
-                            setSearchParams({
-                                page: String(currentPage - 1),
-                            })
+                            setSearchParams({ page: String(currentPage - 1) })
                         }
                         onNext={() =>
-                            setSearchParams({
-                                page: String(currentPage + 1),
-                            })
+                            setSearchParams({ page: String(currentPage + 1) })
                         }
                     />
                 </>
@@ -266,7 +216,7 @@ export default function TeamManagementPage() {
             <dialog
                 ref={dialogRef}
                 className={cn(
-                    'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+                    'fixed top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2',
                     'w-full max-w-[calc(100vw-2rem)] sm:max-w-md',
                     'max-h-[85vh] overflow-y-auto',
                     'rounded-2xl border bg-card p-0 shadow-2xl',
@@ -281,63 +231,24 @@ export default function TeamManagementPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 px-4 pb-6 pt-1 sm:px-6">
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".csv"
-                            className="hidden"
-                            onChange={handleFileSelect}
-                        />
                         {error && (
                             <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                                 {error}
                             </p>
                         )}
                         {!editing && (
-                            <div className="space-y-2 rounded-lg border border-dashed bg-muted/30 p-3">
-                                <p className="text-xs font-medium text-muted-foreground">
-                                    Import from CSV
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={() =>
-                                            fileInputRef.current?.click()
-                                        }
-                                        disabled={isImporting}
-                                        className="gap-2 w-full"
-                                    >
-                                        {isImporting ? (
-                                            <Spinner className="size-4" />
-                                        ) : (
-                                            <Upload className="size-4" />
-                                        )}
-                                        Import CSV
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={handleDownloadTemplate}
-                                        className="gap-2 w-full"
-                                    >
-                                        <Download className="size-4" />
-                                        Template
-                                    </Button>
-                                </div>
-                                {importError && (
-                                    <p className="text-sm text-destructive">
-                                        {importError}
-                                    </p>
-                                )}
-                                {importSuccess !== null && (
-                                    <p className="text-sm text-primary">
-                                        Imported {importSuccess} team
-                                        {importSuccess !== 1 ? 's' : ''}.
-                                    </p>
-                                )}
-                            </div>
+                            <CsvImportBlock
+                                fileInputRef={fileInputRef}
+                                onFileChange={handleFileSelect}
+                                onImportClick={() =>
+                                    fileInputRef.current?.click()
+                                }
+                                onTemplateClick={handleDownloadTemplate}
+                                isImporting={isImporting}
+                                importError={importError}
+                                importSuccess={importSuccess}
+                                itemLabel="team"
+                            />
                         )}
                         <div className="grid gap-2">
                             <Label htmlFor="team-name">Name</Label>

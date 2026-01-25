@@ -1,22 +1,18 @@
 import { userContext } from '@/store/context';
 import type { LoaderFunctionArgs } from 'react-router';
 import { supabase } from '@/lib/supabase/client';
-
-const PAGE_SIZE = (() => {
-    const raw = import.meta.env.VITE_PAGE_SIZE;
-    const n = parseInt(String(raw ?? ''), 10);
-    return Number.isFinite(n) && n >= 1 ? Math.min(n, 100) : 10;
-})();
+import {
+    getPageFromUrl,
+    getRangeForPage,
+    getTotalPages,
+} from '@/lib/pagination';
 
 export async function playersLoader({ request, context }: LoaderFunctionArgs) {
     const user = context.get(userContext);
+    if (!user) throw new Response('Unauthorized', { status: 401 });
 
-    const url = new URL(request.url);
-    const pageParam = url.searchParams.get('page');
-    const page = Math.max(1, parseInt(pageParam || '1', 10) || 1);
-
-    const from = (page - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+    const page = getPageFromUrl(request.url);
+    const { from, to } = getRangeForPage(page);
 
     const [teamsRes, playersRes] = await Promise.all([
         supabase
@@ -28,9 +24,7 @@ export async function playersLoader({ request, context }: LoaderFunctionArgs) {
             .from('players')
             .select(
                 'id, first_name, last_name, number, nickname, team_id, teams(name, short_name)',
-                {
-                    count: 'exact',
-                },
+                { count: 'exact' },
             )
             .eq('user_id', user.id)
             .order('last_name')
@@ -42,7 +36,7 @@ export async function playersLoader({ request, context }: LoaderFunctionArgs) {
     if (playersRes.error) throw playersRes.error;
 
     const totalCount = playersRes.count ?? 0;
-    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    const totalPages = getTotalPages(totalCount);
 
     return {
         players: playersRes.data ?? [],
@@ -50,6 +44,6 @@ export async function playersLoader({ request, context }: LoaderFunctionArgs) {
         totalPages,
         page,
         teams: teamsRes.data ?? [],
-        user,
+        user: { id: user.id },
     };
 }

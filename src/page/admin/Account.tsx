@@ -1,6 +1,6 @@
 import { useNavigate, useLoaderData } from 'react-router';
-import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
+import type { AccountLoaderData } from '@/types/loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,15 +9,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { LogOut, KeyRound, Mail, Calendar, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-function formatDate(iso: string | undefined) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('en-US', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-}
+import { formatDate } from '@/lib/format';
 
 function getInitial(name: string | undefined, email: string) {
     if (name?.trim()) return name.trim().charAt(0).toUpperCase();
@@ -26,7 +18,7 @@ function getInitial(name: string | undefined, email: string) {
 }
 
 export default function AccountPage() {
-    const { user } = useLoaderData() as { user: User };
+    const { user } = useLoaderData() as AccountLoaderData;
     const navigate = useNavigate();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
