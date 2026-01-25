@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 export function UpdatePasswordForm({
     className,
@@ -69,13 +70,29 @@ export function UpdatePasswordForm({
                             {error && (
                                 <p className="text-sm text-red-500">{error}</p>
                             )}
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? 'Saving...' : 'Save new password'}
-                            </Button>
+                            <div>
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading
+                                        ? 'Saving...'
+                                        : 'Save new password'}
+                                </Button>
+                                <Link
+                                    to="/admin"
+                                    className="inline-block w-full mt-2"
+                                >
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2 w-full"
+                                    >
+                                        Return to admin
+                                    </Button>
+                                </Link>
+                            </div>
                         </div>
                     </form>
                 </CardContent>

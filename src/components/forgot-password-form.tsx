@@ -120,7 +120,7 @@ export function ForgotPasswordForm({
                                         className="inline-block w-full mt-2"
                                     >
                                         <Button
-                                            variant="secondary"
+                                            variant="outline"
                                             size="sm"
                                             className="gap-2 w-full"
                                         >
