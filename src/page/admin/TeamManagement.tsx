@@ -189,15 +189,9 @@ export default function TeamManagementPage() {
                                 <EntityListCard
                                     title={t.name}
                                     badge={t.short_name}
-                                    extra={
-                                        t.coach
-                                            ? `Coach: ${t.coach}`
-                                            : undefined
-                                    }
+                                    extra={t.coach ? `${t.coach}` : undefined}
                                     onPlayers={() =>
-                                        navigate(
-                                            `/admin/players?team=${t.id}`,
-                                        )
+                                        navigate(`/admin/players?team=${t.id}`)
                                     }
                                     onEdit={() => openEdit(t)}
                                     onDelete={() => openDeleteConfirm(t)}
