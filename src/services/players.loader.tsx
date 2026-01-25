@@ -23,12 +23,11 @@ export async function playersLoader({ request, context }: LoaderFunctionArgs) {
         supabase
             .from('players')
             .select(
-                'id, first_name, last_name, number, nickname, team_id, teams(name, short_name)',
+                'id, full_name, number, nickname, team_id, teams(name, short_name)',
                 { count: 'exact' },
             )
             .eq('user_id', user.id)
-            .order('last_name')
-            .order('first_name')
+            .order('full_name')
             .range(from, to),
     ]);
 

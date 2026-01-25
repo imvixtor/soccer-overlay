@@ -3,10 +3,10 @@ import type { TeamOption } from '@/types/loader';
 import { parseCSV } from '@/lib/parse-csv';
 
 const PLAYERS_HEADER_PATTERN =
-    /^(first_name|first name|last_name|last name|number|nickname|team|team_short_name|team_short|short_name)$/i;
+    /^(full_name|full name|name|number|nickname|team|team_short_name|team_short|short_name)$/i;
 
 export const PLAYERS_CSV_TEMPLATE =
-    'first_name,last_name,number,nickname,team_short_name\nCristiano,Ronaldo,7,CR7,RMA\nJohn,Doe,10,,MUN\n';
+    'full_name,number,nickname,team_short_name\nCristiano Ronaldo,7,CR7,RMA\nJohn Doe,10,,MUN\n';
 
 export function resolveTeamId(
     shortOrName: string,
@@ -27,7 +27,7 @@ function isPlayersHeader(row: string[]): boolean {
     );
 }
 
-/** Parse CSV thành danh sách Insert. Hàng hợp lệ cần (first_name, last_name, number). */
+/** Parse CSV thành danh sách Insert. Hàng hợp lệ cần (full_name, number). */
 export function parsePlayersCsv(
     text: string,
     teams: TeamOption[],
@@ -38,20 +38,14 @@ export function parsePlayersCsv(
     const dataRows = skipHeader ? rows.slice(1) : rows;
 
     return dataRows
-        .filter(
-            (r) =>
-                (r[0]?.trim() ?? '') &&
-                (r[1]?.trim() ?? '') &&
-                (r[2]?.trim() ?? ''),
-        )
+        .filter((r) => (r[0]?.trim() ?? '') && (r[1]?.trim() ?? ''))
         .map(
             (r): TablesInsert<'players'> => ({
                 user_id: userId,
-                first_name: String(r[0] ?? '').trim(),
-                last_name: String(r[1] ?? '').trim(),
-                number: parseInt(String(r[2] ?? '0'), 10) || 0,
-                nickname: (r[3]?.trim() ?? '') || null,
-                team_id: resolveTeamId(String(r[4] ?? '').trim(), teams),
+                full_name: String(r[0] ?? '').trim() || null,
+                number: parseInt(String(r[1] ?? '0'), 10) || 0,
+                nickname: (r[2]?.trim() ?? '') || null,
+                team_id: resolveTeamId(String(r[3] ?? '').trim(), teams),
             }),
         );
 }

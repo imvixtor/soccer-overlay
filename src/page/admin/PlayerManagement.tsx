@@ -29,8 +29,7 @@ export default function PlayerManagementPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [editing, setEditing] = useState<PlayerWithTeam | null>(null);
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [fullName, setFullName] = useState('');
     const [number, setNumber] = useState('');
     const [nickname, setNickname] = useState('');
     const [teamId, setTeamId] = useState('');
@@ -63,8 +62,7 @@ export default function PlayerManagementPage() {
 
     const openAdd = () => {
         setEditing(null);
-        setFirstName('');
-        setLastName('');
+        setFullName('');
         setNumber('');
         setNickname('');
         setTeamId('');
@@ -75,8 +73,7 @@ export default function PlayerManagementPage() {
 
     const openEdit = (p: PlayerWithTeam) => {
         setEditing(p);
-        setFirstName(p.first_name);
-        setLastName(p.last_name);
+        setFullName(p.full_name ?? '');
         setNumber(String(p.number));
         setNickname(p.nickname ?? '');
         setTeamId(p.team_id != null ? String(p.team_id) : '');
@@ -121,7 +118,7 @@ export default function PlayerManagementPage() {
             const data = parsePlayersCsv(text, teams, user.id);
             if (data.length === 0) {
                 setImportError(
-                    'No valid rows. Each row needs first_name, last_name, number.',
+                    'No valid rows. Each row needs full_name and number.',
                 );
                 return;
             }
@@ -153,8 +150,7 @@ export default function PlayerManagementPage() {
         try {
             if (editing) {
                 const patch: TablesUpdate<'players'> = {
-                    first_name: firstName.trim(),
-                    last_name: lastName.trim(),
+                    full_name: fullName.trim() || null,
                     number: num,
                     nickname: nickname.trim() || null,
                     team_id: teamId ? parseInt(teamId, 10) || null : null,
@@ -163,8 +159,7 @@ export default function PlayerManagementPage() {
             } else {
                 const row: TablesInsert<'players'> = {
                     user_id: user.id,
-                    first_name: firstName.trim(),
-                    last_name: lastName.trim(),
+                    full_name: fullName.trim() || null,
                     number: num,
                     nickname: nickname.trim() || null,
                     team_id: teamId ? parseInt(teamId, 10) || null : null,
@@ -196,7 +191,10 @@ export default function PlayerManagementPage() {
                         {players.map((p) => (
                             <li key={p.id}>
                                 <EntityListCard
-                                    title={`${capitalizeName(p.last_name)} ${capitalizeName(p.first_name)}`}
+                                    title={
+                                        capitalizeName(p.full_name ?? '') ||
+                                        '(No name)'
+                                    }
                                     badge={
                                         p.teams?.short_name ||
                                         p.teams?.name ||
@@ -266,23 +264,12 @@ export default function PlayerManagementPage() {
                             />
                         )}
                         <div className="grid gap-2">
-                            <Label htmlFor="player-first">First name</Label>
+                            <Label htmlFor="player-full-name">Full name</Label>
                             <Input
-                                id="player-first"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                placeholder="e.g. Cristiano"
-                                required
-                                className="h-10"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="player-last">Last name</Label>
-                            <Input
-                                id="player-last"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                placeholder="e.g. Ronaldo"
+                                id="player-full-name"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                placeholder="e.g. Cristiano Ronaldo"
                                 required
                                 className="h-10"
                             />
@@ -361,7 +348,8 @@ export default function PlayerManagementPage() {
                 title="Delete player?"
                 itemName={
                     deletingPlayer
-                        ? `${capitalizeName(deletingPlayer.last_name)} ${capitalizeName(deletingPlayer.first_name)}`
+                        ? capitalizeName(deletingPlayer.full_name ?? '') ||
+                          '(No name)'
                         : 'this player'
                 }
                 onConfirm={confirmDelete}
