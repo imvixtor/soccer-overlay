@@ -1,5 +1,5 @@
-import { useLoaderData, useRevalidator } from 'react-router';
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useLoaderData, useRevalidator, useSearchParams } from 'react-router';
+import { useRef, useState, useEffect } from 'react';
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const PAGE_SIZE = 10;
 type TeamRow = Tables<'teams'>;
 
 function parseCSVLine(line: string): string[] {
@@ -64,11 +63,15 @@ function parseCSV(text: string): string[][] {
 }
 
 export default function TeamManagementPage() {
-    const { teams, user } = useLoaderData() as {
+    const { teams, totalCount, totalPages, page, user } = useLoaderData() as {
         teams: TeamRow[];
+        totalCount: number;
+        totalPages: number;
+        page: number;
         user: { id: string } | null;
     };
     const { revalidate } = useRevalidator();
+    const [, setSearchParams] = useSearchParams();
     const dialogRef = useRef<HTMLDialogElement>(null);
     const deleteDialogRef = useRef<HTMLDialogElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,22 +91,13 @@ export default function TeamManagementPage() {
     const [importError, setImportError] = useState<string | null>(null);
     const [importSuccess, setImportSuccess] = useState<number | null>(null);
 
-    const [page, setPage] = useState(1);
-
-    const totalPages = Math.max(1, Math.ceil(teams.length / PAGE_SIZE));
     const currentPage = Math.min(page, totalPages);
-    const paginatedTeams = useMemo(
-        () =>
-            teams.slice(
-                (currentPage - 1) * PAGE_SIZE,
-                currentPage * PAGE_SIZE,
-            ),
-        [teams, currentPage],
-    );
 
     useEffect(() => {
-        if (page > totalPages) setPage(totalPages);
-    }, [teams.length, page, totalPages]);
+        if (totalPages >= 1 && page > totalPages) {
+            setSearchParams({ page: String(totalPages) }, { replace: true });
+        }
+    }, [totalPages, page, setSearchParams]);
 
     useEffect(() => {
         if (importSuccess === null) return;
@@ -271,14 +265,14 @@ export default function TeamManagementPage() {
                 Teams
             </h1>
 
-            {teams.length === 0 ? (
+            {totalCount === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                     No teams yet. Add your first team.
                 </p>
             ) : (
                 <>
                     <ul className="flex flex-col gap-3">
-                        {paginatedTeams.map((t: TeamRow) => (
+                        {teams.map((t: TeamRow) => (
                             <li key={t.id}>
                                 <div
                                     className={cn(
@@ -338,8 +332,8 @@ export default function TeamManagementPage() {
                         <p className="text-sm text-muted-foreground">
                             Page {currentPage} of {totalPages}
                             <span className="ml-1.5">
-                                ({teams.length} team
-                                {teams.length !== 1 ? 's' : ''})
+                                ({totalCount} team
+                                {totalCount !== 1 ? 's' : ''})
                             </span>
                         </p>
                         <div className="flex items-center gap-2">
@@ -347,7 +341,9 @@ export default function TeamManagementPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                    setPage((p) => Math.max(1, p - 1))
+                                    setSearchParams({
+                                        page: String(currentPage - 1),
+                                    })
                                 }
                                 disabled={currentPage <= 1}
                                 className="gap-1"
@@ -359,7 +355,9 @@ export default function TeamManagementPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                    setPage((p) => Math.min(totalPages, p + 1))
+                                    setSearchParams({
+                                        page: String(currentPage + 1),
+                                    })
                                 }
                                 disabled={currentPage >= totalPages}
                                 className="gap-1"
