@@ -1,5 +1,5 @@
 import { useLoaderData, useRevalidator } from 'react-router';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,52 @@ import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type TeamRow = Tables<'teams'>;
+
+function parseCSVLine(line: string): string[] {
+    const out: string[] = [];
+    let i = 0;
+    while (i < line.length) {
+        if (line[i] === '"') {
+            i++;
+            let s = '';
+            while (i < line.length) {
+                if (line[i] === '"') {
+                    i++;
+                    if (line[i] === '"') {
+                        s += '"';
+                        i++;
+                    } else break;
+                } else {
+                    s += line[i++];
+                }
+            }
+            out.push(s);
+            if (line[i] === ',') i++;
+        } else {
+            let end = i;
+            while (end < line.length && line[end] !== ',') end++;
+            out.push(line.slice(i, end).trim());
+            i = end + 1;
+        }
+    }
+    return out;
+}
+
+function parseCSV(text: string): string[][] {
+    const normalized = text
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/^\uFEFF/, '');
+    return normalized
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .map(parseCSVLine);
+}
 
 export default function TeamManagementPage() {
     const { teams, user } = useLoaderData() as {
@@ -20,6 +62,7 @@ export default function TeamManagementPage() {
     const { revalidate } = useRevalidator();
     const dialogRef = useRef<HTMLDialogElement>(null);
     const deleteDialogRef = useRef<HTMLDialogElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [editing, setEditing] = useState<TeamRow | null>(null);
     const [name, setName] = useState('');
@@ -32,12 +75,24 @@ export default function TeamManagementPage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
+    const [isImporting, setIsImporting] = useState(false);
+    const [importError, setImportError] = useState<string | null>(null);
+    const [importSuccess, setImportSuccess] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (importSuccess === null) return;
+        const t = setTimeout(() => setImportSuccess(null), 4000);
+        return () => clearTimeout(t);
+    }, [importSuccess]);
+
     const openAdd = () => {
         setEditing(null);
         setName('');
         setShortName('');
         setCoach('');
         setError(null);
+        setImportError(null);
+        setImportSuccess(null);
         dialogRef.current?.showModal();
     };
 
@@ -86,6 +141,64 @@ export default function TeamManagementPage() {
         } finally {
             setIsDeleting(false);
         }
+    };
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+        setImportError(null);
+        setImportSuccess(null);
+        setIsImporting(true);
+        e.target.value = '';
+
+        try {
+            const text = await file.text();
+            const rows = parseCSV(text);
+            const isHeader =
+                rows[0] &&
+                /^(name|short_name|short name|coach)$/i.test(
+                    String(rows[0][0] ?? '').trim(),
+                );
+            const data = (isHeader ? rows.slice(1) : rows)
+                .filter((r) => (r[0]?.trim() ?? '') && (r[1]?.trim() ?? ''))
+                .map(
+                    (r): TablesInsert<'teams'> => ({
+                        user_id: user.id,
+                        name: String(r[0] ?? '').trim(),
+                        short_name: String(r[1] ?? '').trim(),
+                        coach: (r[2]?.trim() ?? '') || null,
+                    }),
+                );
+
+            if (data.length === 0) {
+                setImportError(
+                    'No valid rows. Each row needs name and short_name.',
+                );
+                return;
+            }
+
+            const { error: err } = await supabase.from('teams').insert(data);
+            if (err) throw err;
+            setImportSuccess(data.length);
+            revalidate();
+            closeDialog();
+        } catch (x) {
+            setImportError(x instanceof Error ? x.message : 'Import failed.');
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
+    const handleDownloadTemplate = () => {
+        const csv =
+            'name,short_name,coach\nManchester United,MUN,Alex Ferguson\nReal Madrid,RMA,\n';
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'teams-template.csv';
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -231,10 +344,63 @@ export default function TeamManagementPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 px-4 pb-6 pt-1 sm:px-6">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".csv"
+                            className="hidden"
+                            onChange={handleFileSelect}
+                        />
                         {error && (
                             <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                                 {error}
                             </p>
+                        )}
+                        {!editing && (
+                            <div className="space-y-2 rounded-lg border border-dashed bg-muted/30 p-3">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    Import from CSV
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() =>
+                                            fileInputRef.current?.click()
+                                        }
+                                        disabled={isImporting}
+                                        className="gap-2 w-full"
+                                    >
+                                        {isImporting ? (
+                                            <Spinner className="size-4" />
+                                        ) : (
+                                            <Upload className="size-4" />
+                                        )}
+                                        Import CSV
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleDownloadTemplate}
+                                        className="gap-2 w-full"
+                                    >
+                                        <Download className="size-4" />
+                                        Template
+                                    </Button>
+                                </div>
+                                {importError && (
+                                    <p className="text-sm text-destructive">
+                                        {importError}
+                                    </p>
+                                )}
+                                {importSuccess !== null && (
+                                    <p className="text-sm text-primary">
+                                        Imported {importSuccess} team
+                                        {importSuccess !== 1 ? 's' : ''}.
+                                    </p>
+                                )}
+                            </div>
                         )}
                         <div className="grid gap-2">
                             <Label htmlFor="team-name">Name</Label>
