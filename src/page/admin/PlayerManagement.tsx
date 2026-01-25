@@ -278,11 +278,13 @@ export default function PlayerManagementPage() {
                                 <EntityListCard
                                     title={`${capitalizeName(p.last_name)} ${capitalizeName(p.first_name)}`}
                                     badge={
-                                        p.teams?.short_name || p.teams?.name || null
+                                        p.teams?.short_name ||
+                                        p.teams?.name ||
+                                        null
                                     }
-                                    extra={`#${p.number}${
+                                    extra={`${p.number}${
                                         p.nickname
-                                            ? ` • ${capitalizeName(p.nickname)}`
+                                            ? ` : ${capitalizeName(p.nickname)}`
                                             : ''
                                     }`}
                                     onEdit={() => openEdit(p)}
@@ -312,9 +314,7 @@ export default function PlayerManagementPage() {
                 </>
             )}
 
-            {user && (
-                <AddFab onClick={openAdd} aria-label="Add player" />
-            )}
+            {user && <AddFab onClick={openAdd} aria-label="Add player" />}
 
             <dialog
                 ref={dialogRef}

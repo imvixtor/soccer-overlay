@@ -1,10 +1,5 @@
 import { Link, useLocation } from 'react-router';
-import {
-    Flag,
-    Monitor,
-    Users,
-    UserCircle2,
-} from 'lucide-react';
+import { Flag, Monitor, Users, UserCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [

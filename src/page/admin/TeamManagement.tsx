@@ -229,7 +229,11 @@ export default function TeamManagementPage() {
                                 <EntityListCard
                                     title={t.name}
                                     badge={t.short_name}
-                                    extra={t.coach ? `Coach: ${t.coach}` : undefined}
+                                    extra={
+                                        t.coach
+                                            ? `Coach: ${t.coach}`
+                                            : undefined
+                                    }
                                     onEdit={() => openEdit(t)}
                                     onDelete={() => openDeleteConfirm(t)}
                                     showActions={!!user}
@@ -257,9 +261,7 @@ export default function TeamManagementPage() {
                 </>
             )}
 
-            {user && (
-                <AddFab onClick={openAdd} aria-label="Add team" />
-            )}
+            {user && <AddFab onClick={openAdd} aria-label="Add team" />}
 
             <dialog
                 ref={dialogRef}
