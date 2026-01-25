@@ -8,6 +8,7 @@ import AdminLayout from './page/layouts/AdminLayout.tsx';
 import LoadingPage from './page/loading.tsx';
 import { authMiddleware } from './middlewares/auth.middleware.tsx';
 import { userLoader } from './services/user.loader.tsx';
+import { teamsLoader } from './services/teams.loader.tsx';
 
 const router = createBrowserRouter([
     {
@@ -70,6 +71,7 @@ const router = createBrowserRouter([
             },
             {
                 path: 'teams',
+                loader: teamsLoader,
                 lazy: () =>
                     import('./page/admin/TeamManagement.tsx').then(
                         (module) => ({
