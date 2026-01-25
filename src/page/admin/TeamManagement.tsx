@@ -1,4 +1,9 @@
-import { useLoaderData, useRevalidator, useSearchParams } from 'react-router';
+import {
+    useLoaderData,
+    useRevalidator,
+    useSearchParams,
+    useNavigate,
+} from 'react-router';
 import { useRef, useState, useCallback } from 'react';
 import type { TablesInsert, TablesUpdate } from '@/types/supabase';
 import type { TeamsLoaderData } from '@/types/loader';
@@ -28,6 +33,7 @@ export default function TeamManagementPage() {
         useLoaderData() as TeamsLoaderData;
     const { revalidate } = useRevalidator();
     const [, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const dialogRef = useRef<HTMLDialogElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -187,6 +193,11 @@ export default function TeamManagementPage() {
                                         t.coach
                                             ? `Coach: ${t.coach}`
                                             : undefined
+                                    }
+                                    onPlayers={() =>
+                                        navigate(
+                                            `/admin/players?team=${t.id}`,
+                                        )
                                     }
                                     onEdit={() => openEdit(t)}
                                     onDelete={() => openDeleteConfirm(t)}

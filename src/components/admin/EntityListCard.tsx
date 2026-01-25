@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type EntityListCardProps = {
@@ -8,6 +8,7 @@ type EntityListCardProps = {
     extra?: React.ReactNode;
     onEdit?: () => void;
     onDelete?: () => void;
+    onPlayers?: () => void;
     showActions: boolean;
 };
 
@@ -17,6 +18,7 @@ export function EntityListCard({
     extra,
     onEdit,
     onDelete,
+    onPlayers,
     showActions,
 }: EntityListCardProps) {
     return (
@@ -48,6 +50,16 @@ export function EntityListCard({
             </div>
             {showActions && (
                 <div className="flex shrink-0 items-center gap-1">
+                    {onPlayers && (
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={onPlayers}
+                            aria-label="Players"
+                        >
+                            <Users className="size-4" />
+                        </Button>
+                    )}
                     {onEdit && (
                         <Button
                             variant="ghost"
