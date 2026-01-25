@@ -9,6 +9,7 @@ import LoadingPage from './page/loading.tsx';
 import { authMiddleware } from './middlewares/auth.middleware.tsx';
 import { userLoader } from './services/user.loader.tsx';
 import { teamsLoader } from './services/teams.loader.tsx';
+import { playersLoader } from './services/players.loader.tsx';
 
 const router = createBrowserRouter([
     {
@@ -82,6 +83,7 @@ const router = createBrowserRouter([
             },
             {
                 path: 'players',
+                loader: playersLoader,
                 lazy: () =>
                     import('./page/admin/PlayerManagement.tsx').then(
                         (module) => ({
