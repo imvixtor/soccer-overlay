@@ -113,7 +113,7 @@ export default function AccountPage() {
                         className="w-full gap-2 sm:w-auto"
                         size="default"
                     >
-                        <Link to="/auth/update-password">
+                        <Link to="/auth/update-password?from=admin">
                             <KeyRound className="size-4" />
                             Change password
                         </Link>

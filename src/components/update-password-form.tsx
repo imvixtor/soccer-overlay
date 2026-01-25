@@ -11,12 +11,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 
 export function UpdatePasswordForm({
     className,
     ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
+    const [searchParams] = useSearchParams();
+    const fromAdmin = searchParams.get('from') === 'admin';
+
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -80,18 +83,20 @@ export function UpdatePasswordForm({
                                         ? 'Saving...'
                                         : 'Save new password'}
                                 </Button>
-                                <Link
-                                    to="/admin"
-                                    className="inline-block w-full mt-2"
-                                >
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-2 w-full"
+                                {fromAdmin && (
+                                    <Link
+                                        to="/admin"
+                                        className="inline-block w-full mt-2"
                                     >
-                                        Return to admin
-                                    </Button>
-                                </Link>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2 w-full"
+                                        >
+                                            Return to admin
+                                        </Button>
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     </form>
