@@ -1,5 +1,5 @@
 import { useLoaderData, useRevalidator } from 'react-router';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,9 +7,18 @@ import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Plus, Pencil, Trash2, Upload, Download } from 'lucide-react';
+import {
+    Plus,
+    Pencil,
+    Trash2,
+    Upload,
+    Download,
+    ChevronLeft,
+    ChevronRight,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const PAGE_SIZE = 10;
 type TeamRow = Tables<'teams'>;
 
 function parseCSVLine(line: string): string[] {
@@ -78,6 +87,23 @@ export default function TeamManagementPage() {
     const [isImporting, setIsImporting] = useState(false);
     const [importError, setImportError] = useState<string | null>(null);
     const [importSuccess, setImportSuccess] = useState<number | null>(null);
+
+    const [page, setPage] = useState(1);
+
+    const totalPages = Math.max(1, Math.ceil(teams.length / PAGE_SIZE));
+    const currentPage = Math.min(page, totalPages);
+    const paginatedTeams = useMemo(
+        () =>
+            teams.slice(
+                (currentPage - 1) * PAGE_SIZE,
+                currentPage * PAGE_SIZE,
+            ),
+        [teams, currentPage],
+    );
+
+    useEffect(() => {
+        if (page > totalPages) setPage(totalPages);
+    }, [teams.length, page, totalPages]);
 
     useEffect(() => {
         if (importSuccess === null) return;
@@ -240,13 +266,7 @@ export default function TeamManagementPage() {
     };
 
     return (
-        <div
-            className={cn(
-                'flex flex-col gap-4 sm:gap-5',
-                'max-w-xl mx-auto',
-                'pb-20',
-            )}
-        >
+        <div className={cn('flex flex-col gap-4 sm:gap-5', 'max-w-xl mx-auto')}>
             <h1 className="text-center text-xl font-semibold tracking-tight sm:text-2xl">
                 Teams
             </h1>
@@ -256,60 +276,100 @@ export default function TeamManagementPage() {
                     No teams yet. Add your first team.
                 </p>
             ) : (
-                <ul className="flex flex-col gap-3">
-                    {teams.map((t) => (
-                        <li key={t.id}>
-                            <div
-                                className={cn(
-                                    'flex items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-sm',
-                                )}
-                            >
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate font-medium text-foreground">
-                                        {t.name}
-                                    </p>
-                                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                                        <span
-                                            className={cn(
-                                                'inline-flex shrink-0 items-center justify-center',
-                                                'w-12 rounded px-2 py-0.5 text-xs font-medium',
-                                                'bg-muted text-muted-foreground',
-                                            )}
-                                        >
-                                            {t.short_name}
-                                        </span>
-                                        {t.coach && (
-                                            <span className="text-xs text-muted-foreground">
-                                                Coach: {t.coach}
+                <>
+                    <ul className="flex flex-col gap-3">
+                        {paginatedTeams.map((t: TeamRow) => (
+                            <li key={t.id}>
+                                <div
+                                    className={cn(
+                                        'flex items-center gap-3 rounded-lg border bg-card px-4 py-3 shadow-sm',
+                                    )}
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate font-medium text-foreground">
+                                            {t.name}
+                                        </p>
+                                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                            <span
+                                                className={cn(
+                                                    'inline-flex shrink-0 items-center justify-center',
+                                                    'w-12 rounded px-2 py-0.5 text-xs font-medium',
+                                                    'bg-muted text-muted-foreground',
+                                                )}
+                                            >
+                                                {t.short_name}
                                             </span>
-                                        )}
+                                            {t.coach && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    Coach: {t.coach}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
+                                    {user && (
+                                        <div className="flex shrink-0 items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                onClick={() => openEdit(t)}
+                                                aria-label="Edit"
+                                            >
+                                                <Pencil className="size-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                onClick={() =>
+                                                    openDeleteConfirm(t)
+                                                }
+                                                aria-label="Delete"
+                                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                            >
+                                                <Trash2 className="size-4" />
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
-                                {user && (
-                                    <div className="flex shrink-0 items-center gap-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            onClick={() => openEdit(t)}
-                                            aria-label="Edit"
-                                        >
-                                            <Pencil className="size-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon-sm"
-                                            onClick={() => openDeleteConfirm(t)}
-                                            aria-label="Delete"
-                                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                        >
-                                            <Trash2 className="size-4" />
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div className="flex flex-col items-center gap-3 py-4 sm:flex-row sm:justify-between">
+                        <p className="text-sm text-muted-foreground">
+                            Page {currentPage} of {totalPages}
+                            <span className="ml-1.5">
+                                ({teams.length} team
+                                {teams.length !== 1 ? 's' : ''})
+                            </span>
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    setPage((p) => Math.max(1, p - 1))
+                                }
+                                disabled={currentPage <= 1}
+                                className="gap-1"
+                            >
+                                <ChevronLeft className="size-4" />
+                                Prev
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                    setPage((p) => Math.min(totalPages, p + 1))
+                                }
+                                disabled={currentPage >= totalPages}
+                                className="gap-1"
+                            >
+                                Next
+                                <ChevronRight className="size-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </>
             )}
 
             {user && (
