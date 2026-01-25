@@ -24,7 +24,8 @@ export default function PlayerManagementPage() {
     const { players, totalCount, totalPages, page, teams, user } =
         useLoaderData() as PlayersLoaderData;
     const { revalidate } = useRevalidator();
-    const [, setSearchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const teamFilter = searchParams.get('team') ?? 'all';
     const dialogRef = useRef<HTMLDialogElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -175,15 +176,53 @@ export default function PlayerManagementPage() {
         }
     };
 
+    const setPage = (p: number) =>
+        setSearchParams((prev) => {
+            const n = new URLSearchParams(prev);
+            n.set('page', String(p));
+            return n;
+        });
+
+    const setTeamFilterParam = (value: string) =>
+        setSearchParams((prev) => {
+            const n = new URLSearchParams(prev);
+            if (value === 'all') n.delete('team');
+            else n.set('team', value);
+            n.delete('page');
+            return n;
+        });
+
     return (
         <div className={cn('flex flex-col gap-4 sm:gap-5', 'max-w-xl mx-auto')}>
             <h1 className="text-center text-xl font-semibold tracking-tight sm:text-2xl">
                 Players
             </h1>
 
+            <div className="grid gap-2">
+                <Label htmlFor="player-filter-team">Team</Label>
+                <select
+                    id="player-filter-team"
+                    value={teamFilter}
+                    onChange={(e) => setTeamFilterParam(e.target.value)}
+                    className={cn(
+                        'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    )}
+                >
+                    <option value="all">All teams</option>
+                    {teams.map((t) => (
+                        <option key={t.id} value={t.id}>
+                            {t.name} ({t.short_name})
+                        </option>
+                    ))}
+                </select>
+            </div>
+
             {totalCount === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                    No players yet. Add your first player.
+                    {teamFilter !== 'all'
+                        ? 'No players in this team.'
+                        : 'No players yet. Add your first player.'}
                 </p>
             ) : (
                 <>
@@ -214,12 +253,8 @@ export default function PlayerManagementPage() {
                         totalPages={totalPages}
                         totalCount={totalCount}
                         itemLabel="player"
-                        onPrev={() =>
-                            setSearchParams({ page: String(currentPage - 1) })
-                        }
-                        onNext={() =>
-                            setSearchParams({ page: String(currentPage + 1) })
-                        }
+                        onPrev={() => setPage(currentPage - 1)}
+                        onNext={() => setPage(currentPage + 1)}
                     />
                 </>
             )}

@@ -5,6 +5,7 @@ import {
     getPageFromUrl,
     getRangeForPage,
     getTotalPages,
+    getTeamIdFilterFromUrl,
 } from '@/lib/pagination';
 
 export async function playersLoader({ request, context }: LoaderFunctionArgs) {
@@ -12,6 +13,7 @@ export async function playersLoader({ request, context }: LoaderFunctionArgs) {
     if (!user) throw new Response('Unauthorized', { status: 401 });
 
     const page = getPageFromUrl(request.url);
+    const teamId = getTeamIdFilterFromUrl(request.url);
     const { from, to } = getRangeForPage(page);
 
     const [teamsRes, playersRes] = await Promise.all([
@@ -20,15 +22,17 @@ export async function playersLoader({ request, context }: LoaderFunctionArgs) {
             .select('id, name, short_name')
             .eq('user_id', user.id)
             .order('name'),
-        supabase
-            .from('players')
-            .select(
-                'id, full_name, number, nickname, team_id, teams(name, short_name)',
-                { count: 'exact' },
-            )
-            .eq('user_id', user.id)
-            .order('full_name')
-            .range(from, to),
+        (() => {
+            let q = supabase
+                .from('players')
+                .select(
+                    'id, full_name, number, nickname, team_id, teams(name, short_name)',
+                    { count: 'exact' },
+                )
+                .eq('user_id', user.id);
+            if (teamId != null) q = q.eq('team_id', teamId);
+            return q.order('full_name').range(from, to);
+        })(),
     ]);
 
     if (teamsRes.error) throw teamsRes.error;
