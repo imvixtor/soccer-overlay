@@ -3,7 +3,9 @@ import { supabase } from '@/lib/supabase/client';
 import { userContext } from '@/store/context';
 
 export async function authMiddleware({ context }: LoaderFunctionArgs) {
-    const user = (await supabase.auth.getSession()).data.session?.user;
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
         throw redirect('/auth/login');
     }
