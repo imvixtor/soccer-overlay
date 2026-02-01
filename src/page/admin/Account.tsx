@@ -45,7 +45,10 @@ export default function AccountPage() {
 
     return (
         <div className={cn('flex flex-col gap-4 sm:gap-6', 'max-w-xl mx-auto')}>
-            <Card className="overflow-hidden mt-2">
+            <h1 className="text-center text-xl font-semibold tracking-tight sm:text-2xl">
+                Account
+            </h1>
+            <Card className="overflow-hidden">
                 <CardContent className="space-y-4 py-4">
                     <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-5">
                         {/* Avatar: image first, fallback to initial */}
