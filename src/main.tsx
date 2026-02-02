@@ -8,6 +8,7 @@ import AdminLayout from './page/layouts/AdminLayout.tsx';
 import LoadingPage from './page/loading.tsx';
 import { authMiddleware } from './middlewares/auth.middleware.tsx';
 import { userLoader } from './services/user.loader.tsx';
+import { overlayLoader } from './services/overlay.loader.tsx';
 import { teamsLoader } from './services/teams.loader.tsx';
 import { playersLoader } from './services/players.loader.tsx';
 import { matchLoader } from './services/match.loader.tsx';
@@ -16,6 +17,15 @@ const router = createBrowserRouter([
     {
         path: '/',
         element: <App />,
+    },
+    {
+        path: '/overlay/:userId',
+        loader: overlayLoader,
+        lazy: () =>
+            import('./page/overlay.tsx').then((module) => ({
+                Component: module.default,
+            })),
+        hydrateFallbackElement: <LoadingPage />,
     },
     {
         path: '/auth/login',

@@ -1,0 +1,83 @@
+/* Trang overlay - nền trong suốt để dùng với OBS/stream */
+.overlay-page {
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* CSS variables cho overlay components (ScoreBug, MatchStatus, GlobalClock) */
+.overlay-page {
+    --color-dark-navy: #0f172a;
+    --color-teal: #0d9488;
+    --color-dark-green-85: rgba(6, 78, 59, 0.85);
+    --color-green: #059669;
+}
+
+/* Lineup overlay - danh sách cầu thủ ra sân */
+.overlay-lineup {
+    position: fixed;
+    bottom: 32px;
+    left: 64px;
+    width: 320px;
+    max-height: 400px;
+    z-index: 10;
+    background: var(--color-dark-navy);
+    color: #fff;
+    font-family: 'Inter', 'Fira Sans Condensed', sans-serif;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.overlay-lineup-header {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    background: var(--color-dark-navy);
+    border-bottom: 2px solid var(--color-teal, #0d9488);
+}
+
+.overlay-lineup-accent {
+    width: 6px;
+    height: 100%;
+    background: var(--team-accent, #0000ff);
+    margin-right: 10px;
+}
+
+.overlay-lineup-title {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.overlay-lineup-list {
+    padding: 8px 12px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.overlay-lineup-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.overlay-lineup-item:last-child {
+    border-bottom: none;
+}
+
+.overlay-lineup-number {
+    font-weight: 700;
+    color: var(--color-teal, #0d9488);
+    min-width: 36px;
+}
+
+.overlay-lineup-name {
+    flex: 1;
+}

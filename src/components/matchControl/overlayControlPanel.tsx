@@ -8,6 +8,8 @@ import {
     CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Copy, Check } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import type { OverlayControlRow } from '@/services/control.api';
 import { upsertOverlayControl } from '@/services/control.api';
@@ -28,6 +30,23 @@ export default function OverlayControlPanel({
     const [hasInitialized, setHasInitialized] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+
+    const overlayUrl =
+        typeof window !== 'undefined'
+            ? `${window.location.origin}/overlay/${userId}`
+            : '';
+
+    const copyOverlayUrl = async () => {
+        if (!overlayUrl) return;
+        try {
+            await navigator.clipboard.writeText(overlayUrl);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 2000);
+        } catch {
+            /* ignore */
+        }
+    };
 
     // Đồng bộ lại khi loader revalidate
     useEffect(() => {
@@ -130,6 +149,37 @@ export default function OverlayControlPanel({
                 </CardAction>
             </CardHeader>
             <CardContent className="py-5 space-y-6">
+                {/* URL overlay - mọi người có thể truy cập xem overlay qua link này */}
+                <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                        URL Overlay (công khai)
+                    </p>
+                    <div className="flex gap-2">
+                        <Input
+                            readOnly
+                            value={overlayUrl}
+                            className="font-mono text-sm"
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={copyOverlayUrl}
+                            title="Copy URL"
+                        >
+                            {copied ? (
+                                <Check className="size-4 text-green-600" />
+                            ) : (
+                                <Copy className="size-4" />
+                            )}
+                        </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Copy URL và thêm vào OBS/Streamlabs để hiển thị overlay.
+                        Ai có link đều có thể xem overlay bạn đang điều khiển.
+                    </p>
+                </div>
+
                 {!hasInitialized ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Spinner className="size-4" />
