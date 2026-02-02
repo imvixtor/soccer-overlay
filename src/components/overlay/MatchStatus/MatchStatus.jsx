@@ -5,7 +5,7 @@ function MatchStatus({
     period = "HIỆP 2",
     league = "Giao hữu",
     agency = "",
-    events = [{team: string, shirtNumber: number, playerName: string, minute: number, type: string}],
+    events = [],
     homeTeam = "THÁI SƠN",
     awayTeam = "THẠCH KHUÂN",
     homeScore = 3,
@@ -28,8 +28,8 @@ function MatchStatus({
             {events.length > 0 && (
                 <div className={styles.middleBar}>
                     <div className={styles.eventsLeft}>
-                        {homeEvents.map((event, index) => (
-                            <div key={index} className={styles.eventItem}>
+                        {homeEvents.map((event) => (
+                            <div key={event.id} className={styles.eventItem}>
                                 {event.minute}&apos; {event.playerName} {event.shirtNumber}
                                 {event.type && event.type !== 'goal' && (
                                     <span className={styles.eventType}> ({event.type})</span>
@@ -38,8 +38,8 @@ function MatchStatus({
                         ))}
                     </div>
                     <div className={styles.eventsRight}>
-                        {awayEvents.map((event, index) => (
-                            <div key={index} className={styles.eventItem}>
+                        {awayEvents.map((event) => (
+                            <div key={event.id} className={styles.eventItem}>
                                 {event.minute}&apos; {event.playerName} {event.shirtNumber}
                                 {event.type && event.type !== 'goal' && (
                                     <span className={styles.eventType}> ({event.type})</span>

@@ -29,6 +29,18 @@
     padding: 8px 16px;
     font-size: 16px;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+    animation: middleBarExpand 0.4s ease-out;
+}
+
+@keyframes middleBarExpand {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .eventsLeft {
@@ -49,6 +61,18 @@
 
 .eventItem {
     display: inline-block;
+    animation: eventSlideIn 0.35s ease-out;
+}
+
+@keyframes eventSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .eventType {

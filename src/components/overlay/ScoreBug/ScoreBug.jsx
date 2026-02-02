@@ -13,10 +13,16 @@ function getRegulationEnd(phase, halfDuration, extraDuration) {
     switch (phase) {
         case 'FIRST_HALF':
             return halfDuration * 60;
+        case 'HALFTIME':
+            return halfDuration * 60;
         case 'SECOND_HALF':
+            return 2 * halfDuration * 60;
+        case 'FULLTIME':
             return 2 * halfDuration * 60;
         case 'EXTIME_FIRST_HALF':
             return 2 * halfDuration * 60 + extraDuration * 60;
+        case 'EXTIME_HALF_TIME':
+            return 2 * halfDuration * 60;
         case 'EXTIME_SECOND_HALF':
             return 2 * halfDuration * 60 + 2 * extraDuration * 60;
         default:
@@ -77,7 +83,7 @@ function ScoreBug({
 
                 {additionalTimeStr && (
                     <div className={styles.additionalTimeSection}>
-                        + {additionalTimeStr}
+                        +{additionalTimeStr}
                     </div>
                 )}
             </div>

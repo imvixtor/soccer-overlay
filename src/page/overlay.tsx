@@ -34,17 +34,20 @@ type PlayerForEvents = {
     team_id: number | null;
 };
 
-function transformEventsForMatchStatus(
-    events: MatchEventRow[],
-    playerById: Map<number, PlayerForEvents>,
-    match: MatchWithTeams | null,
-): {
+export type MatchStatusEvent = {
+    id: number;
     team: 'home' | 'away';
     shirtNumber: number;
     playerName: string;
     minute: number;
     type: string;
-}[] {
+};
+
+function transformEventsForMatchStatus(
+    events: MatchEventRow[],
+    playerById: Map<number, PlayerForEvents>,
+    match: MatchWithTeams | null,
+): MatchStatusEvent[] {
     if (!match) return [];
     const homeTeamId = match.home_team;
     const awayTeamId = match.away_team;
@@ -61,6 +64,7 @@ function transformEventsForMatchStatus(
             ? p.nickname?.trim() || p.full_name?.trim() || ''
             : '';
         return {
+            id: ev.id,
             team,
             shirtNumber: p?.number ?? 0,
             playerName,
@@ -131,6 +135,9 @@ export default function OverlayPage() {
     );
     const [matchTime, setMatchTime] = useState('00:00');
     const [matchTimeSeconds, setMatchTimeSeconds] = useState(0);
+    const [matchEvents, setMatchEvents] = useState<MatchEventRow[]>(
+        initial.matchEvents ?? [],
+    );
 
     const phase = (match?.phase ?? DEFAULT_PHASE) as MatchPhase;
     const matchConfig = initial.matchConfig;
@@ -146,11 +153,11 @@ export default function OverlayPage() {
     const matchStatusEvents = useMemo(
         () =>
             transformEventsForMatchStatus(
-                initial.matchEvents,
+                matchEvents,
                 playerById,
                 match,
             ),
-        [initial.matchEvents, playerById, match],
+        [matchEvents, playerById, match],
     );
 
     // Realtime: match
@@ -173,6 +180,55 @@ export default function OverlayPage() {
                 },
             )
             .subscribe();
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [match?.id]);
+
+    // Realtime: match_events
+    useEffect(() => {
+        if (!match?.id) return;
+
+        const channel = supabase
+            .channel(`overlay-match-events:${match.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'match_events',
+                    filter: `match_id=eq.${match.id}`,
+                },
+                (payload) => {
+                    const newRow = payload.new as MatchEventRow;
+                    setMatchEvents((prev) => {
+                        const next = [...prev, newRow].sort(
+                            (a, b) =>
+                                a.minute - b.minute ||
+                                new Date(a.created_at).getTime() -
+                                    new Date(b.created_at).getTime(),
+                        );
+                        return next;
+                    });
+                },
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'DELETE',
+                    schema: 'public',
+                    table: 'match_events',
+                    filter: `match_id=eq.${match.id}`,
+                },
+                (payload) => {
+                    const oldRow = payload.old as { id: number };
+                    setMatchEvents((prev) =>
+                        prev.filter((e) => e.id !== oldRow.id),
+                    );
+                },
+            )
+            .subscribe();
+
         return () => {
             supabase.removeChannel(channel);
         };
