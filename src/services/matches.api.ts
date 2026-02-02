@@ -1,7 +1,13 @@
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase';
 import type { MatchPhase } from '@/lib/match-constants';
-import { shouldResetStartAt } from '@/lib/match-constants';
+import {
+    shouldResetStartAt,
+    isHalfStartPhase,
+    isHalfEndPhase,
+} from '@/lib/match-constants';
 import { supabase } from '@/lib/supabase/client';
+import { resetAllPlayersToBench } from '@/services/players.api';
+import { deleteMatchEventsByMatchId } from '@/services/match-events.api';
 
 export type MatchRow = Tables<'matches'>;
 
@@ -45,7 +51,15 @@ export async function getMatchWithTeams(
 
 /** Create new match (phase INITIATION). Config (half_duration, etc.) comes from match_config. */
 export async function createMatch(
-    payload: Pick<MatchInsertFields, 'user_id' | 'home_team' | 'away_team' | 'name'>,
+    payload: Pick<
+        MatchInsertFields,
+        | 'user_id'
+        | 'home_team'
+        | 'away_team'
+        | 'name'
+        | 'home_color'
+        | 'away_color'
+    >,
 ): Promise<{ data: MatchRow | null; error: Error | null }> {
     const { data, error } = await supabase
         .from('matches')
@@ -77,18 +91,33 @@ export async function updateMatch(
     return { data, error: error ?? null };
 }
 
-/** Update phase and start_at (reset clock when needed). */
+/** Update phase and start_at/stop_at (reset clock when needed). */
 export async function updateMatchPhase(
     matchId: number,
     nextPhase: MatchPhase,
 ): Promise<{ data: MatchRow | null; error: Error | null }> {
     const updates: Partial<MatchUpdateFields> = { phase: nextPhase };
-    if (shouldResetStartAt(nextPhase)) {
-        updates.start_at = new Date().toISOString();
+    const now = new Date().toISOString();
+
+    // Khi bắt đầu hiệp đấu: đặt lại start_at là thời điểm bắt đầu, stop_at là null
+    if (isHalfStartPhase(nextPhase)) {
+        updates.start_at = now;
+        updates.stop_at = null;
     }
-    if (nextPhase === 'POST_MATCH') {
-        updates.stop_at = new Date().toISOString();
+    // Khi kết thúc hiệp đấu: đặt stop_at là thời điểm kết thúc
+    else if (isHalfEndPhase(nextPhase)) {
+        updates.stop_at = now;
     }
+    // Khi vào PENALTY_SHOOTOUT: không đếm giờ nữa, chỉ ghi nhận thời gian kết thúc gần nhất
+    else if (nextPhase === 'PENALTY_SHOOTOUT') {
+        // Giữ nguyên stop_at hiện tại (thời gian kết thúc gần nhất)
+        // Không reset start_at
+    }
+    // Khi kết thúc trận đấu: đặt stop_at
+    else if (nextPhase === 'POST_MATCH') {
+        updates.stop_at = now;
+    }
+
     const { data, error } = await supabase
         .from('matches')
         .update(updates)
@@ -118,4 +147,34 @@ export async function resetMatch(
         .select()
         .single();
     return { data, error: error ?? null };
+}
+
+/**
+ * Reset match + reset trạng thái cầu thủ về mặc định:
+ * - tất cả cầu thủ: không ra sân, sẵn sàng dự bị
+ */
+export async function resetMatchWithPlayers(
+    matchId: number,
+    userId: string,
+): Promise<{ data: MatchRow | null; error: Error | null }> {
+    // Xoá toàn bộ event của trận trước khi reset
+    const delEventsRes = await deleteMatchEventsByMatchId(matchId);
+    if (delEventsRes.error) {
+        return { data: null, error: delEventsRes.error };
+    }
+
+    const matchRes = await resetMatch(matchId);
+    if (matchRes.error) return matchRes;
+
+    try {
+        await resetAllPlayersToBench(userId);
+    } catch (e) {
+        return {
+            data: matchRes.data,
+            error:
+                e instanceof Error ? e : new Error('Failed to reset players'),
+        };
+    }
+
+    return matchRes;
 }

@@ -58,3 +58,14 @@ export async function deleteMatchEvent(
         .eq('id', eventId);
     return { error: error ?? null };
 }
+
+/** Delete all events for a match. */
+export async function deleteMatchEventsByMatchId(
+    matchId: number,
+): Promise<{ error: Error | null }> {
+    const { error } = await supabase
+        .from('match_events')
+        .delete()
+        .eq('match_id', matchId);
+    return { error: error ?? null };
+}

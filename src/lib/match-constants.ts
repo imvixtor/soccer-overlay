@@ -32,10 +32,100 @@ export function shouldResetStartAt(phase: MatchPhase): boolean {
     return RESET_START_AT_PHASES.includes(phase);
 }
 
+/** Phases that mark the start of a half (reset start_at, clear stop_at). */
+const HALF_START_PHASES: MatchPhase[] = [
+    'FIRST_HALF',
+    'SECOND_HALF',
+    'EXTIME_FIRST_HALF',
+    'EXTIME_SECOND_HALF',
+];
+
+export function isHalfStartPhase(phase: MatchPhase): boolean {
+    return HALF_START_PHASES.includes(phase);
+}
+
+/** Phases that mark the end of a half (set stop_at). */
+const HALF_END_PHASES: MatchPhase[] = [
+    'HALFTIME',
+    'FULLTIME',
+    'EXTIME_HALF_TIME',
+];
+
+export function isHalfEndPhase(phase: MatchPhase): boolean {
+    return HALF_END_PHASES.includes(phase);
+}
+
+/**
+ * Tính thời gian bù (offset) dựa trên phase hiện tại.
+ * @param phase Phase hiện tại
+ * @param halfDuration Thời lượng một hiệp (phút)
+ * @param extraDuration Thời lượng hiệp phụ (phút)
+ * @returns Thời gian bù tính bằng giây
+ */
+export function getTimeOffset(
+    phase: MatchPhase,
+    halfDuration: number,
+    extraDuration: number,
+): number {
+    switch (phase) {
+        case 'FIRST_HALF':
+            return 0;
+        case 'SECOND_HALF':
+            return halfDuration * 60; // Chuyển phút sang giây
+        case 'EXTIME_FIRST_HALF':
+            return 2 * halfDuration * 60;
+        case 'EXTIME_SECOND_HALF':
+            return 2 * halfDuration * 60 + extraDuration * 60;
+        default:
+            return 0;
+    }
+}
+
 export function getNextPhase(current: MatchPhase): MatchPhase | null {
     const i = PHASE_ORDER.indexOf(current);
     if (i < 0 || i >= PHASE_ORDER.length - 1) return null;
     return PHASE_ORDER[i + 1];
+}
+
+/**
+ * Lấy phase tiếp theo dựa trên config, bỏ qua các phase không áp dụng.
+ * @param current Phase hiện tại
+ * @param extraDuration Thời lượng hiệp phụ (0 = không có hiệp phụ)
+ * @param hasPenaltyShootout Có thi đấu penalty không
+ * @returns Phase tiếp theo hoặc null nếu không có
+ */
+export function getNextPhaseWithConfig(
+    current: MatchPhase,
+    extraDuration: number,
+    hasPenaltyShootout: boolean,
+): MatchPhase | null {
+    const i = PHASE_ORDER.indexOf(current);
+    if (i < 0 || i >= PHASE_ORDER.length - 1) return null;
+
+    // Tìm phase tiếp theo hợp lệ
+    for (let j = i + 1; j < PHASE_ORDER.length; j++) {
+        const candidate = PHASE_ORDER[j];
+
+        // Bỏ qua các phase hiệp phụ nếu không có hiệp phụ
+        if (extraDuration === 0) {
+            if (
+                candidate === 'EXTIME_FIRST_HALF' ||
+                candidate === 'EXTIME_HALF_TIME' ||
+                candidate === 'EXTIME_SECOND_HALF'
+            ) {
+                continue;
+            }
+        }
+
+        // Bỏ qua penalty nếu không có penalty
+        if (!hasPenaltyShootout && candidate === 'PENALTY_SHOOTOUT') {
+            continue;
+        }
+
+        return candidate;
+    }
+
+    return null;
 }
 
 export function getPhaseIndex(phase: MatchPhase): number {
