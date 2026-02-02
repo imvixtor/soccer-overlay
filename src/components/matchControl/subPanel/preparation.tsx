@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { formatPlayerLabel } from '@/lib/format';
 import type { MatchWithTeams } from '@/services/matches.api';
 import type { MatchConfigRow } from '@/services/match-config.api';
 import { supabase } from '@/lib/supabase/client';
@@ -24,11 +25,6 @@ interface PreparationPanelProps {
     matchConfig: MatchConfigRow | null;
     userId: string;
     onMatchUpdated?: () => void;
-}
-
-function playerLabel(p: PlayerRowLite) {
-    const name = p.nickname?.trim() || p.full_name?.trim() || 'Unknown';
-    return `#${p.number} ${name}`;
 }
 
 export default function PreparationPanel({
@@ -66,7 +62,7 @@ export default function PreparationPanel({
         [players, awayTeamId],
     );
 
-    const loadPlayers = async () => {
+    const loadPlayers = useCallback(async () => {
         if (!teamIds.length) {
             setPlayers([]);
             return;
@@ -87,7 +83,7 @@ export default function PreparationPanel({
             const rows = (res.data ?? []) as PlayerRowLite[];
             setPlayers(rows);
 
-            // sync selection from DB state
+            // sync selection từ trạng thái DB
             const home = new Set<number>();
             const away = new Set<number>();
             for (const p of rows) {
@@ -106,12 +102,11 @@ export default function PreparationPanel({
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [teamIds, userId, homeTeamId, awayTeamId]);
 
     useEffect(() => {
         void loadPlayers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userId, homeTeamId, awayTeamId]);
+    }, [loadPlayers]);
 
     const toggleHome = (playerId: number) => {
         setError(null);
@@ -251,7 +246,7 @@ export default function PreparationPanel({
                                             disabled={isSaving}
                                         />
                                         <span className="flex-1">
-                                            {playerLabel(p)}
+                                            {formatPlayerLabel(p)}
                                         </span>
                                     </label>
                                 ))
@@ -291,7 +286,7 @@ export default function PreparationPanel({
                                             disabled={isSaving}
                                         />
                                         <span className="flex-1">
-                                            {playerLabel(p)}
+                                            {formatPlayerLabel(p)}
                                         </span>
                                     </label>
                                 ))

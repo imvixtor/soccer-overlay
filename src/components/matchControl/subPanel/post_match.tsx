@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import type { MatchWithTeams } from '@/services/matches.api';
 import { supabase } from '@/lib/supabase/client';
 import { EVENT_TYPE_LABELS, type EventType } from '@/lib/match-constants';
+import { formatPlayerLabel } from '@/lib/format';
 
 type PlayerLite = {
     id: number;
@@ -28,9 +29,7 @@ type MatchEventDetailed = {
 };
 
 function playerLabel(p: PlayerLite | null) {
-    if (!p) return 'Unknown player';
-    const name = p.nickname?.trim() || p.full_name?.trim() || 'Unknown';
-    return `#${p.number} ${name}`;
+    return formatPlayerLabel(p, 'Unknown player');
 }
 
 interface MatchStatsProps {
@@ -61,7 +60,7 @@ export function MatchStats({ match }: MatchStatsProps) {
         return { homeId, awayId };
     }, [match?.home_team, match?.away_team]);
 
-    const loadEvents = async () => {
+    const loadEvents = useCallback(async () => {
         if (!matchId) {
             setEvents([]);
             return;
@@ -92,12 +91,11 @@ export function MatchStats({ match }: MatchStatsProps) {
         } finally {
             setIsLoadingEvents(false);
         }
-    };
+    }, [matchId]);
 
     useEffect(() => {
         void loadEvents();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [matchId]);
+    }, [loadEvents]);
 
     return (
         <div className="space-y-4">

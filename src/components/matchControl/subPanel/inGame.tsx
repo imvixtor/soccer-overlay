@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import {
     type EventType,
     type MatchPhase,
 } from '@/lib/match-constants';
+import { formatPlayerLabel } from '@/lib/format';
 import type { MatchWithTeams } from '@/services/matches.api';
 import { updateMatch } from '@/services/matches.api';
 import {
@@ -43,11 +44,6 @@ interface InGamePanelProps {
     halfDuration: number;
     extraDuration: number;
     onMatchUpdated?: () => void;
-}
-
-function playerLabel(p: PlayerRowLite) {
-    const name = p.nickname?.trim() || p.full_name?.trim() || 'Unknown';
-    return `#${p.number} ${name}`;
 }
 
 function teamLabel(p: PlayerRowLite, match: MatchWithTeams | null) {
@@ -103,7 +99,7 @@ export default function InGamePanel({
         return map;
     }, [players]);
 
-    const loadPlayers = async () => {
+    const loadPlayers = useCallback(async () => {
         if (!matchId || !homeTeamId || !awayTeamId) {
             setPlayers([]);
             return;
@@ -131,9 +127,9 @@ export default function InGamePanel({
         } finally {
             setIsLoadingPlayers(false);
         }
-    };
+    }, [awayTeamId, homeTeamId, matchId, userId]);
 
-    const loadEvents = async () => {
+    const loadEvents = useCallback(async () => {
         if (!matchId) {
             setEvents([]);
             return;
@@ -153,12 +149,11 @@ export default function InGamePanel({
         } finally {
             setIsLoadingEvents(false);
         }
-    };
+    }, [matchId]);
 
     useEffect(() => {
         void loadPlayers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [matchId, userId, homeTeamId, awayTeamId]);
+    }, [loadPlayers]);
 
     // Open/close dialog by state
     useEffect(() => {
@@ -169,8 +164,7 @@ export default function InGamePanel({
     // Load events when match thay đổi
     useEffect(() => {
         void loadEvents();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [matchId]);
+    }, [loadEvents]);
 
     const resetFormMessages = () => {
         setFormError(null);
@@ -519,7 +513,7 @@ export default function InGamePanel({
                             {events.map((ev) => {
                                 const p = playerById.get(ev.player_id);
                                 const label = p
-                                    ? `${teamLabel(p, match)} ${playerLabel(p)}`
+                                    ? `${teamLabel(p, match)} ${formatPlayerLabel(p)}`
                                     : `#${ev.player_id}`;
                                 return (
                                     <div
@@ -679,7 +673,7 @@ export default function InGamePanel({
                                         {players.map((p) => (
                                             <option key={p.id} value={p.id}>
                                                 {teamLabel(p, match)}{' '}
-                                                {playerLabel(p)}
+                                                {formatPlayerLabel(p)}
                                             </option>
                                         ))}
                                     </select>
@@ -737,7 +731,7 @@ export default function InGamePanel({
                                     {players.map((p) => (
                                         <option key={p.id} value={p.id}>
                                             {teamLabel(p, match)}{' '}
-                                            {playerLabel(p)}
+                                            {formatPlayerLabel(p)}
                                         </option>
                                     ))}
                                 </select>
@@ -799,7 +793,7 @@ export default function InGamePanel({
                                             .map((p) => (
                                                 <option key={p.id} value={p.id}>
                                                     {teamLabel(p, match)}{' '}
-                                                    {playerLabel(p)}
+                                                    {formatPlayerLabel(p)}
                                                 </option>
                                             ))}
                                     </select>
@@ -855,7 +849,7 @@ export default function InGamePanel({
                                             .map((p) => (
                                                 <option key={p.id} value={p.id}>
                                                     {teamLabel(p, match)}{' '}
-                                                    {playerLabel(p)}
+                                                    {formatPlayerLabel(p)}
                                                 </option>
                                             ))}
                                     </select>
