@@ -189,6 +189,14 @@ export default function OverlayPage() {
         [matchEvents, playerById, match],
     );
 
+    // Khi không có match: xóa events để tránh hiển thị stale
+    useEffect(() => {
+        if (!match?.id) {
+            setMatchEvents([]);
+            setToastQueue([]);
+        }
+    }, [match?.id]);
+
     // Realtime: match
     useEffect(() => {
         if (!match?.id) return;
@@ -203,9 +211,19 @@ export default function OverlayPage() {
                     filter: `id=eq.${match.id}`,
                 },
                 (payload) => {
-                    setMatch((prev) =>
-                        prev ? { ...prev, ...payload.new } : null,
-                    );
+                    const updated = payload.new as Record<string, unknown>;
+                    setMatch((prev) => (prev ? { ...prev, ...updated } : null));
+                    // Phát hiện reset: phase INITIATION + tỉ số 0 → xóa events và toast
+                    if (
+                        updated?.phase === 'INITIATION' &&
+                        (updated?.home_score ?? 0) === 0 &&
+                        (updated?.away_score ?? 0) === 0 &&
+                        (updated?.penalty_home ?? 0) === 0 &&
+                        (updated?.penalty_away ?? 0) === 0
+                    ) {
+                        setMatchEvents([]);
+                        setToastQueue([]);
+                    }
                 },
             )
             .subscribe();
@@ -253,10 +271,11 @@ export default function OverlayPage() {
                     filter: `match_id=eq.${match.id}`,
                 },
                 (payload) => {
-                    const oldRow = payload.old as { id: number };
-                    setMatchEvents((prev) =>
-                        prev.filter((e) => e.id !== oldRow.id),
-                    );
+                    const oldRow = payload.old as { id?: number } | null;
+                    if (oldRow?.id != null)
+                        setMatchEvents((prev) =>
+                            prev.filter((e) => e.id !== oldRow.id),
+                        );
                 },
             )
             .subscribe();
