@@ -119,6 +119,7 @@ export default function OverlayPage() {
     const [matchEvents, setMatchEvents] = useState<MatchEventRow[]>(
         initial.matchEvents ?? [],
     );
+    const [players, setPlayers] = useState(initial.players);
     const [toastQueue, setToastQueue] = useState<ToastItem[]>([]);
 
     const phase = (match?.phase ?? DEFAULT_PHASE) as MatchPhase;
@@ -128,9 +129,9 @@ export default function OverlayPage() {
 
     const playerById = useMemo(() => {
         const map = new Map<number, PlayerForEvents>();
-        for (const p of initial.players) map.set(p.id, p);
+        for (const p of players) map.set(p.id, p);
         return map;
-    }, [initial.players]);
+    }, [players]);
 
     const matchStatusEvents = useMemo(
         () => transformEventsForMatchStatus(matchEvents, playerById, match),
@@ -142,8 +143,45 @@ export default function OverlayPage() {
         if (!match?.id) {
             setMatchEvents([]);
             setToastQueue([]);
+            setPlayers([]);
+        } else {
+            // Khi có match mới: reset players về initial data
+            setPlayers(initial.players);
         }
-    }, [match?.id]);
+    }, [match?.id, initial.players]);
+
+    // Realtime: players
+    useEffect(() => {
+        if (!initial.userId) return;
+
+        const channel = supabase
+            .channel(`overlay-players:${initial.userId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'players',
+                    filter: `user_id=eq.${initial.userId}`,
+                },
+                async () => {
+                    // Reload players khi có thay đổi
+                    const { data } = await supabase
+                        .from('players')
+                        .select(
+                            'id, full_name, nickname, number, team_id, is_on_field',
+                        )
+                        .eq('user_id', initial.userId)
+                        .order('number', { ascending: true });
+                    if (data) setPlayers(data);
+                },
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [initial.userId]);
 
     // Realtime: match
     useEffect(() => {
@@ -408,7 +446,7 @@ export default function OverlayPage() {
             {ctrl.lineup_enable && (
                 <Lineup
                     match={match}
-                    players={initial.players}
+                    players={players}
                     teams={initial.teams}
                     isAway={ctrl.away_lineup}
                 />
