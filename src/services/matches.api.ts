@@ -1,9 +1,8 @@
 import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase';
-import type { MatchPhase } from '@/lib/match-constants';
 import {
-    shouldResetStartAt,
     isHalfStartPhase,
     isHalfEndPhase,
+    type MatchPhase,
 } from '@/lib/match-constants';
 import { supabase } from '@/lib/supabase/client';
 import { resetAllPlayersToBench } from '@/services/players.api';

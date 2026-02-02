@@ -14,6 +14,7 @@ export default defineConfig([
         '.vite',
         '.idea',
         '.vscode',
+        'src/types/supabase.ts',
     ]),
     {
         files: ['**/*.{ts,tsx}'],
