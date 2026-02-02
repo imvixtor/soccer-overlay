@@ -22,6 +22,7 @@ import {
 } from '@/services/match-events.api';
 import { supabase } from '@/lib/supabase/client';
 import { updatePlayer } from '@/services/players.api';
+import { InGameHeader } from './InGameHeader';
 
 type PlayerRowLite = {
     id: number;
@@ -44,6 +45,132 @@ interface InGamePanelProps {
     halfDuration: number;
     extraDuration: number;
     onMatchUpdated?: () => void;
+}
+
+interface InGameEventsTableProps {
+    events: MatchEventRow[];
+    match: MatchWithTeams | null;
+    playerById: Map<number, PlayerRowLite>;
+    isLoadingEvents: boolean;
+    isSubmitting: boolean;
+    eventsError: string | null;
+    onReload: () => void;
+    onDelete: (ev: MatchEventRow) => void;
+}
+
+function InGameEventsTable({
+    events,
+    match,
+    playerById,
+    isLoadingEvents,
+    isSubmitting,
+    eventsError,
+    onReload,
+    onDelete,
+}: InGameEventsTableProps) {
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium">
+                    Sự kiện ({events.length})
+                </span>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onReload}
+                    disabled={isLoadingEvents || isSubmitting}
+                    className="gap-2"
+                >
+                    {(isLoadingEvents || isSubmitting) && (
+                        <Spinner className="size-4" />
+                    )}
+                    Tải lại
+                </Button>
+            </div>
+
+            {eventsError && (
+                <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    {eventsError}
+                </p>
+            )}
+
+            {isLoadingEvents ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                    <Spinner className="size-4" /> Đang tải…
+                </div>
+            ) : events.length ? (
+                <div className="rounded-md border overflow-hidden">
+                    <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs text-muted-foreground bg-muted/30">
+                        <div className="col-span-2">Phút</div>
+                        <div className="col-span-3">Loại</div>
+                        <div className="col-span-6">Cầu thủ</div>
+                        <div className="col-span-1 text-right"> </div>
+                    </div>
+                    <div className="max-h-[360px] overflow-auto">
+                        {events.map((ev) => {
+                            const p = playerById.get(ev.player_id);
+                            const label = p
+                                ? `${teamLabel(p, match)} ${formatPlayerLabel(p)}`
+                                : `#${ev.player_id}`;
+                            return (
+                                <div
+                                    key={ev.id}
+                                    className="grid grid-cols-12 gap-2 px-3 py-2 text-sm border-t items-center"
+                                >
+                                    <div className="col-span-2">
+                                        {ev.minute}'
+                                    </div>
+                                    <div className="col-span-3">
+                                        <span
+                                            className={cn(
+                                                'text-xs font-medium',
+                                                ev.type === 'GOAL' &&
+                                                    'text-green-600',
+                                                ev.type === 'YELLOW' &&
+                                                    'text-yellow-500',
+                                                ev.type === 'RED' &&
+                                                    'text-red-500',
+                                            )}
+                                        >
+                                            {EVENT_TYPE_LABELS[ev.type]}
+                                        </span>
+                                    </div>
+                                    <div className="col-span-6">
+                                        {label}
+                                        {ev.type === 'SUB' &&
+                                            ev.player_out_id && (
+                                                <span className="text-muted-foreground">
+                                                    {' '}
+                                                    (ra #{ev.player_out_id})
+                                                </span>
+                                            )}
+                                    </div>
+                                    <div className="col-span-1 text-right">
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() =>
+                                                onDelete(ev as MatchEventRow)
+                                            }
+                                            disabled={isSubmitting}
+                                        >
+                                            Xoá
+                                        </Button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            ) : (
+                <p className="text-sm text-muted-foreground">
+                    Chưa có sự kiện nào.
+                </p>
+            )}
+        </div>
+    );
 }
 
 function teamLabel(p: PlayerRowLite, match: MatchWithTeams | null) {
@@ -364,53 +491,9 @@ export default function InGamePanel({
 
     const canUseInGame = Boolean(matchId && homeTeamId && awayTeamId);
 
-    const homeName =
-        match?.home_team_data?.short_name ||
-        match?.home_team_data?.name ||
-        'Đội nhà';
-    const awayName =
-        match?.away_team_data?.short_name ||
-        match?.away_team_data?.name ||
-        'Đội khách';
-    const homeColor = match?.home_color ?? null;
-    const awayColor = match?.away_color ?? null;
-
     return (
         <div className="space-y-3">
-            <div className="rounded-2xl border bg-card px-4 py-3 flex items-center justify-between gap-3">
-                <div className="flex flex-col items-start">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                        {homeName}
-                    </span>
-                    <span
-                        className="mt-1 h-1.5 w-10 rounded-sm"
-                        style={{ backgroundColor: homeColor ?? 'transparent' }}
-                        aria-hidden
-                    />
-                    <span className="text-2xl font-semibold">
-                        {match?.home_score ?? 0}
-                    </span>
-                </div>
-                <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                        {phase}
-                    </span>
-                    <span className="text-sm font-medium">{matchTime}</span>
-                </div>
-                <div className="flex flex-col items-end">
-                    <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                        {awayName}
-                    </span>
-                    <span
-                        className="mt-1 h-1.5 w-10 rounded-sm"
-                        style={{ backgroundColor: awayColor ?? 'transparent' }}
-                        aria-hidden
-                    />
-                    <span className="text-2xl font-semibold">
-                        {match?.away_score ?? 0}
-                    </span>
-                </div>
-            </div>
+            <InGameHeader phase={phase} match={match} matchTime={matchTime} />
 
             {playersError && (
                 <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
@@ -471,109 +554,16 @@ export default function InGamePanel({
             </div>
 
             {/* Danh sách sự kiện luôn hiển thị */}
-            <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium">
-                        Sự kiện ({events.length})
-                    </span>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={loadEvents}
-                        disabled={isLoadingEvents || isSubmitting}
-                        className="gap-2"
-                    >
-                        {(isLoadingEvents || isSubmitting) && (
-                            <Spinner className="size-4" />
-                        )}
-                        Tải lại
-                    </Button>
-                </div>
-
-                {eventsError && (
-                    <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                        {eventsError}
-                    </p>
-                )}
-
-                {isLoadingEvents ? (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                        <Spinner className="size-4" /> Đang tải…
-                    </div>
-                ) : events.length ? (
-                    <div className="rounded-md border overflow-hidden">
-                        <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs text-muted-foreground bg-muted/30">
-                            <div className="col-span-2">Phút</div>
-                            <div className="col-span-3">Loại</div>
-                            <div className="col-span-6">Cầu thủ</div>
-                            <div className="col-span-1 text-right"> </div>
-                        </div>
-                        <div className="max-h-[360px] overflow-auto">
-                            {events.map((ev) => {
-                                const p = playerById.get(ev.player_id);
-                                const label = p
-                                    ? `${teamLabel(p, match)} ${formatPlayerLabel(p)}`
-                                    : `#${ev.player_id}`;
-                                return (
-                                    <div
-                                        key={ev.id}
-                                        className="grid grid-cols-12 gap-2 px-3 py-2 text-sm border-t items-center"
-                                    >
-                                        <div className="col-span-2">
-                                            {ev.minute}'
-                                        </div>
-                                        <div className="col-span-3">
-                                            <span
-                                                className={cn(
-                                                    'text-xs font-medium',
-                                                    ev.type === 'GOAL' &&
-                                                        'text-green-600',
-                                                    ev.type === 'YELLOW' &&
-                                                        'text-yellow-500',
-                                                    ev.type === 'RED' &&
-                                                        'text-red-500',
-                                                )}
-                                            >
-                                                {EVENT_TYPE_LABELS[ev.type]}
-                                            </span>
-                                        </div>
-                                        <div className="col-span-6">
-                                            {label}
-                                            {ev.type === 'SUB' &&
-                                                ev.player_out_id && (
-                                                    <span className="text-muted-foreground">
-                                                        {' '}
-                                                        (ra #{ev.player_out_id})
-                                                    </span>
-                                                )}
-                                        </div>
-                                        <div className="col-span-1 text-right">
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() =>
-                                                    handleDeleteEvent(
-                                                        ev as MatchEventRow,
-                                                    )
-                                                }
-                                                disabled={isSubmitting}
-                                            >
-                                                Xoá
-                                            </Button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                ) : (
-                    <p className="text-sm text-muted-foreground">
-                        Chưa có sự kiện nào.
-                    </p>
-                )}
-            </div>
+            <InGameEventsTable
+                events={events}
+                match={match}
+                playerById={playerById}
+                isLoadingEvents={isLoadingEvents}
+                isSubmitting={isSubmitting}
+                eventsError={eventsError}
+                onReload={loadEvents}
+                onDelete={handleDeleteEvent}
+            />
 
             <dialog
                 ref={dialogRef}
