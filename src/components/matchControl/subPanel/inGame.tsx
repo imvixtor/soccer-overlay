@@ -464,6 +464,7 @@ export default function InGamePanel({
                 </Button>
                 <Button
                     type="button"
+                    variant="outline"
                     onClick={() => {
                         resetFormMessages();
                         setClockMinute(currentMinute);
@@ -595,7 +596,7 @@ export default function InGamePanel({
                         {activeModal === 'CARD' && 'Thêm thẻ phạt'}
                         {activeModal === 'GOAL' && 'Thêm bàn thắng'}
                         {activeModal === 'SUB' && 'Thêm thay người'}
-                        {activeModal === 'EVENTS' && 'Danh sách sự kiện'}
+                        {activeModal === 'CLOCK' && 'Đặt đồng hồ'}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 px-4 pb-5 pt-0">
@@ -821,14 +822,36 @@ export default function InGamePanel({
                                             'disabled:cursor-not-allowed disabled:opacity-50',
                                         )}
                                         disabled={
-                                            isSubmitting || isLoadingPlayers
+                                            isSubmitting ||
+                                            isLoadingPlayers ||
+                                            !subPlayerOutId
                                         }
                                     >
                                         <option value="">
                                             -- Chọn cầu thủ --
                                         </option>
                                         {players
-                                            .filter((p) => p.is_substitute)
+                                            .filter((p) => {
+                                                if (!p.is_substitute) {
+                                                    return false;
+                                                }
+                                                if (!subPlayerOutId) {
+                                                    return true;
+                                                }
+                                                const outPlayer =
+                                                    playerById.get(
+                                                        Number(subPlayerOutId),
+                                                    );
+                                                if (!outPlayer) {
+                                                    return true;
+                                                }
+                                                return (
+                                                    p.team_id != null &&
+                                                    outPlayer.team_id != null &&
+                                                    p.team_id ===
+                                                        outPlayer.team_id
+                                                );
+                                            })
                                             .map((p) => (
                                                 <option key={p.id} value={p.id}>
                                                     {teamLabel(p, match)}{' '}
