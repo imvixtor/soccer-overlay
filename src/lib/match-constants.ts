@@ -80,6 +80,29 @@ export function isClockRunningPhase(phase: MatchPhase): boolean {
     return CLOCK_RUNNING_PHASES.includes(phase);
 }
 
+/**
+ * Mốc thời gian (giây) kết thúc hiệp chính theo phase.
+ * Vượt mốc này = vào thời gian bù giờ.
+ */
+export function getRegulationEndSeconds(
+    phase: MatchPhase,
+    halfDuration: number,
+    extraDuration: number,
+): number {
+    switch (phase) {
+        case 'FIRST_HALF':
+            return halfDuration * 60;
+        case 'SECOND_HALF':
+            return 2 * halfDuration * 60;
+        case 'EXTIME_FIRST_HALF':
+            return 2 * halfDuration * 60 + extraDuration * 60;
+        case 'EXTIME_SECOND_HALF':
+            return 2 * halfDuration * 60 + 2 * extraDuration * 60;
+        default:
+            return Infinity; // Phase khác: không chia main/additional
+    }
+}
+
 /** Chuyển match_time (giây) sang chuỗi MM:SS. */
 export function formatMatchTimeSeconds(totalSeconds: number): string {
     const minutes = Math.floor(Math.max(0, totalSeconds) / 60);

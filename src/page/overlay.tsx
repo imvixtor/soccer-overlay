@@ -130,6 +130,7 @@ export default function OverlayPage() {
         initial.overlayControl,
     );
     const [matchTime, setMatchTime] = useState('00:00');
+    const [matchTimeSeconds, setMatchTimeSeconds] = useState(0);
 
     const phase = (match?.phase ?? DEFAULT_PHASE) as MatchPhase;
     const matchConfig = initial.matchConfig;
@@ -224,10 +225,11 @@ export default function OverlayPage() {
                 const now = Date.now();
                 const elapsed = Math.floor((now - start) / 1000);
                 const totalSeconds = elapsed + timeOffset;
+                setMatchTimeSeconds(totalSeconds);
                 const minutes = Math.floor(totalSeconds / 60);
-                const seconds = totalSeconds % 60;
+                const secs = totalSeconds % 60;
                 setMatchTime(
-                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
+                    `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
                 );
             };
             updateTime();
@@ -237,13 +239,22 @@ export default function OverlayPage() {
         const stop = new Date(match.stop_at).getTime();
         const elapsed = Math.floor((stop - start) / 1000);
         const totalSeconds = elapsed + timeOffset;
+        setMatchTimeSeconds(totalSeconds);
         const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        const secs = totalSeconds % 60;
+        const formatted = `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         queueMicrotask(() => setMatchTime(formatted));
     }, [match?.start_at, match?.stop_at, phase, halfDuration, extraDuration]);
 
     const displayMatchTime = stoppedPhaseTime ?? noStartTime ?? matchTime;
+
+    /** Số giây tổng cho ScoreBug (logic thời gian bù nằm trong ScoreBug) */
+    const scoreBugMatchTimeSeconds =
+        isClockStoppedPhase(phase) && match
+            ? (match.match_time ?? 0)
+            : !match?.start_at && !isClockStoppedPhase(phase)
+              ? 0
+              : matchTimeSeconds;
 
     const ctrl = overlayControl ?? {
         clock_enable: true,
@@ -291,7 +302,10 @@ export default function OverlayPage() {
                     awayTeam={awayName}
                     homeScore={match?.home_score ?? 0}
                     awayScore={match?.away_score ?? 0}
-                    matchTime={displayMatchTime}
+                    matchTime={scoreBugMatchTimeSeconds}
+                    phase={phase}
+                    halfDuration={halfDuration}
+                    extraDuration={extraDuration}
                     homeTeamAccentColor={homeColor}
                     awayTeamAccentColor={awayColor}
                 />
