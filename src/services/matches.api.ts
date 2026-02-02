@@ -2,9 +2,12 @@ import type { Tables, TablesInsert, TablesUpdate } from '@/types/supabase';
 import {
     isHalfStartPhase,
     isHalfEndPhase,
-    type MatchPhase,
+    isClockRunningPhase,
+    getTimeOffset,
 } from '@/lib/match-constants';
+import type { MatchPhase } from '@/lib/match-constants';
 import { supabase } from '@/lib/supabase/client';
+import { getMatchConfig } from './match-config.api';
 import { resetAllPlayersToBench } from '@/services/players.api';
 import { deleteMatchEventsByMatchId } from '@/services/match-events.api';
 
@@ -97,20 +100,62 @@ export async function updateMatchPhase(
 ): Promise<{ data: MatchRow | null; error: Error | null }> {
     const updates: Partial<MatchUpdateFields> = { phase: nextPhase };
     const now = new Date().toISOString();
+    const nowMs = Date.now();
+
+    // Khi chuyển sang phase đồng hồ dừng: ghi nhận thời gian đang đếm vào match_time
+    const isNextClockStopped =
+        nextPhase === 'HALFTIME' ||
+        nextPhase === 'FULLTIME' ||
+        nextPhase === 'EXTIME_HALF_TIME' ||
+        nextPhase === 'PENALTY_SHOOTOUT' ||
+        nextPhase === 'POST_MATCH';
+
+    if (isNextClockStopped) {
+        const { data: currentMatch } = await supabase
+            .from('matches')
+            .select('phase, start_at, stop_at, user_id')
+            .eq('id', matchId)
+            .single();
+
+        if (
+            currentMatch &&
+            isClockRunningPhase(currentMatch.phase as MatchPhase)
+        ) {
+            const { data: config } = await getMatchConfig(
+                currentMatch.user_id as string,
+            );
+            const halfDuration = config?.half_duration ?? 45;
+            const extraDuration = config?.extra_duration ?? 15;
+
+            const refTimeMs =
+                currentMatch.stop_at != null
+                    ? new Date(currentMatch.stop_at).getTime()
+                    : nowMs;
+            const startMs = currentMatch.start_at
+                ? new Date(currentMatch.start_at).getTime()
+                : nowMs;
+            const elapsedSeconds = Math.floor((refTimeMs - startMs) / 1000);
+            const timeOffset = getTimeOffset(
+                currentMatch.phase as MatchPhase,
+                halfDuration,
+                extraDuration,
+            );
+            updates.match_time = elapsedSeconds + timeOffset;
+        }
+    }
 
     // Khi bắt đầu hiệp đấu: đặt lại start_at là thời điểm bắt đầu, stop_at là null
     if (isHalfStartPhase(nextPhase)) {
         updates.start_at = now;
         updates.stop_at = null;
     }
-    // Khi kết thúc hiệp đấu: đặt stop_at là thời điểm kết thúc
+    // Khi chuyển sang phase nghỉ: đặt stop_at là thời điểm kết thúc
     else if (isHalfEndPhase(nextPhase)) {
         updates.stop_at = now;
     }
-    // Khi vào PENALTY_SHOOTOUT: không đếm giờ nữa, chỉ ghi nhận thời gian kết thúc gần nhất
+    // Khi vào PENALTY_SHOOTOUT: dừng đồng hồ, ghi nhận thời gian
     else if (nextPhase === 'PENALTY_SHOOTOUT') {
-        // Giữ nguyên stop_at hiện tại (thời gian kết thúc gần nhất)
-        // Không reset start_at
+        updates.stop_at = now;
     }
     // Khi kết thúc trận đấu: đặt stop_at
     else if (nextPhase === 'POST_MATCH') {

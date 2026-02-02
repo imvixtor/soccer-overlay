@@ -55,6 +55,38 @@ export function isHalfEndPhase(phase: MatchPhase): boolean {
     return HALF_END_PHASES.includes(phase);
 }
 
+/** Phases mà đồng hồ không đếm (rest, fulltime, penalty, post_match) – hiển thị match_time từ DB. */
+export const CLOCK_STOPPED_PHASES: MatchPhase[] = [
+    'HALFTIME',
+    'FULLTIME',
+    'EXTIME_HALF_TIME',
+    'PENALTY_SHOOTOUT',
+    'POST_MATCH',
+];
+
+/** Phases mà đồng hồ đếm (đang thi đấu). */
+export const CLOCK_RUNNING_PHASES: MatchPhase[] = [
+    'FIRST_HALF',
+    'SECOND_HALF',
+    'EXTIME_FIRST_HALF',
+    'EXTIME_SECOND_HALF',
+];
+
+export function isClockStoppedPhase(phase: MatchPhase): boolean {
+    return CLOCK_STOPPED_PHASES.includes(phase);
+}
+
+export function isClockRunningPhase(phase: MatchPhase): boolean {
+    return CLOCK_RUNNING_PHASES.includes(phase);
+}
+
+/** Chuyển match_time (giây) sang chuỗi MM:SS. */
+export function formatMatchTimeSeconds(totalSeconds: number): string {
+    const minutes = Math.floor(Math.max(0, totalSeconds) / 60);
+    const seconds = Math.floor(Math.max(0, totalSeconds) % 60);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 /**
  * Tính thời gian bù (offset) dựa trên phase hiện tại.
  * @param phase Phase hiện tại

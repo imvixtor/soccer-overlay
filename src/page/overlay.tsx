@@ -2,7 +2,11 @@ import { useEffect, useState, useMemo } from 'react';
 import { useLoaderData } from 'react-router';
 import type { OverlayLoaderData } from '@/services/overlay.loader';
 import { supabase } from '@/lib/supabase/client';
-import { getTimeOffset } from '@/lib/match-constants';
+import {
+    getTimeOffset,
+    isClockStoppedPhase,
+    formatMatchTimeSeconds,
+} from '@/lib/match-constants';
 import type { MatchPhase } from '@/lib/match-constants';
 // @ts-expect-error - overlay components are JSX without types
 import ScoreBug from '@/components/overlay/ScoreBug/ScoreBug';
@@ -198,34 +202,19 @@ export default function OverlayPage() {
         };
     }, [initial.userId]);
 
-    // Tính match time
-    useEffect(() => {
-        if (phase === 'PENALTY_SHOOTOUT') {
-            if (match?.start_at && match?.stop_at) {
-                const timeOffset = getTimeOffset(
-                    'EXTIME_SECOND_HALF',
-                    halfDuration,
-                    extraDuration,
-                );
-                const start = new Date(match.start_at).getTime();
-                const stop = new Date(match.stop_at).getTime();
-                const elapsed = Math.floor((stop - start) / 1000);
-                const totalSeconds = elapsed + timeOffset;
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = totalSeconds % 60;
-                setMatchTime(
-                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
-                );
-            } else {
-                setMatchTime('00:00');
-            }
-            return;
-        }
+    // Giá trị hiển thị khi đồng hồ dừng – tính từ match_time trong DB
+    const stoppedPhaseTime =
+        isClockStoppedPhase(phase) && match
+            ? formatMatchTimeSeconds(match.match_time ?? 0)
+            : null;
 
-        if (!match?.start_at) {
-            setMatchTime('00:00');
-            return;
-        }
+    // Giá trị khi chưa có start_at (chưa bắt đầu đếm)
+    const noStartTime =
+        !isClockStoppedPhase(phase) && !match?.start_at ? '00:00' : null;
+
+    // Tính match time khi đồng hồ chạy (có start_at)
+    useEffect(() => {
+        if (isClockStoppedPhase(phase) || !match?.start_at) return;
 
         const timeOffset = getTimeOffset(phase, halfDuration, extraDuration);
         const start = new Date(match.start_at).getTime();
@@ -244,17 +233,17 @@ export default function OverlayPage() {
             updateTime();
             const interval = setInterval(updateTime, 1000);
             return () => clearInterval(interval);
-        } else {
-            const stop = new Date(match.stop_at).getTime();
-            const elapsed = Math.floor((stop - start) / 1000);
-            const totalSeconds = elapsed + timeOffset;
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            setMatchTime(
-                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
-            );
         }
+        const stop = new Date(match.stop_at).getTime();
+        const elapsed = Math.floor((stop - start) / 1000);
+        const totalSeconds = elapsed + timeOffset;
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        queueMicrotask(() => setMatchTime(formatted));
     }, [match?.start_at, match?.stop_at, phase, halfDuration, extraDuration]);
+
+    const displayMatchTime = stoppedPhaseTime ?? noStartTime ?? matchTime;
 
     const ctrl = overlayControl ?? {
         clock_enable: true,
@@ -264,14 +253,8 @@ export default function OverlayPage() {
         away_lineup: false,
     };
 
-    const homeName =
-        match?.home_team_data?.short_name ||
-        match?.home_team_data?.name ||
-        'Đội nhà';
-    const awayName =
-        match?.away_team_data?.short_name ||
-        match?.away_team_data?.name ||
-        'Đội khách';
+    const homeName = match?.home_team_data?.name || 'Đội nhà';
+    const awayName = match?.away_team_data?.name || 'Đội khách';
     const homeColor = match?.home_color ?? '#0000FF';
     const awayColor = match?.away_color ?? '#FF0000';
     const league = match?.name ?? 'Giao hữu';
@@ -308,7 +291,7 @@ export default function OverlayPage() {
                     awayTeam={awayName}
                     homeScore={match?.home_score ?? 0}
                     awayScore={match?.away_score ?? 0}
-                    matchTime={matchTime}
+                    matchTime={displayMatchTime}
                     homeTeamAccentColor={homeColor}
                     awayTeamAccentColor={awayColor}
                 />
@@ -316,7 +299,7 @@ export default function OverlayPage() {
 
             {ctrl.match_status_enable && (
                 <MatchStatus
-                    matchTime={matchTime}
+                    matchTime={displayMatchTime}
                     period={periodLabel}
                     league={league}
                     homeTeam={homeName}

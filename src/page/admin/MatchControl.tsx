@@ -8,6 +8,8 @@ import {
     getNextPhaseWithConfig,
     PHASE_LABELS,
     getTimeOffset,
+    isClockStoppedPhase,
+    formatMatchTimeSeconds,
     type MatchPhase,
 } from '@/lib/match-constants';
 import MatchControlPanel from '@/components/matchControl/matchControlPanel';
@@ -80,30 +82,10 @@ export default function MatchControlPage() {
     useEffect(() => {
         const phase = match?.phase ?? DEFAULT_PHASE;
 
-        // Ở hiệp penalty: ghi nhận thời gian kết thúc gần nhất, không đếm giờ nữa
-        if (phase === 'PENALTY_SHOOTOUT') {
-            if (match?.start_at && match?.stop_at) {
-                // Hiển thị thời gian trận đấu đã chạy đến khi kết thúc hiệp gần nhất
-                const halfDuration = matchConfig?.half_duration ?? 45;
-                const extraDuration = matchConfig?.extra_duration ?? 15;
-                // Tính offset cho hiệp phụ 2 (hiệp gần nhất trước penalty)
-                const timeOffset = getTimeOffset(
-                    'EXTIME_SECOND_HALF',
-                    halfDuration,
-                    extraDuration,
-                );
-                const start = new Date(match.start_at).getTime();
-                const stop = new Date(match.stop_at).getTime();
-                const elapsed = Math.floor((stop - start) / 1000);
-                const totalSeconds = elapsed + timeOffset;
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = totalSeconds % 60;
-                setMatchTime(
-                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
-                );
-            } else {
-                setMatchTime('00:00');
-            }
+        // Ở phase đồng hồ dừng (rest, fulltime, penalty, post_match): hiển thị match_time từ DB
+        if (isClockStoppedPhase(phase)) {
+            const stored = match?.match_time ?? 0;
+            setMatchTime(formatMatchTimeSeconds(stored));
             return;
         }
 
@@ -152,6 +134,7 @@ export default function MatchControlPage() {
         match?.start_at,
         match?.stop_at,
         match?.phase,
+        match?.match_time,
         matchConfig?.half_duration,
         matchConfig?.extra_duration,
     ]);
