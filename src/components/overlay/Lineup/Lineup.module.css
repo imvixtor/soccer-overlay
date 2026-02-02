@@ -1,0 +1,189 @@
+/* Lineup overlay - đồ họa đội hình giống PNG */
+.overlayLineup {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    font-family:
+        'Inter',
+        'Fira Sans Condensed',
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        sans-serif;
+    color: #fff;
+}
+
+.overlayLineupCard {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 1470px;
+    height: 830px;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    background: var(--color-dark-green-85);
+}
+
+.overlayLineupTopbar {
+    height: 56px;
+}
+
+.overlayLineupBottombar {
+    height: 56px;
+}
+
+.overlayLineupTopbar,
+.overlayLineupBottombar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: var(--color-dark-navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.overlayLineupTopbar {
+    top: 0;
+}
+
+.overlayLineupBottombar {
+    bottom: 0;
+}
+
+.overlayLineupTeamName {
+    font-size: 20px;
+}
+
+.overlayLineupContent {
+    position: absolute;
+    inset: 56px 0 56px;
+    display: grid;
+    grid-template-columns: minmax(280px, 0.35fr) minmax(0, 0.65fr);
+    background: var(--color-dark-green-85);
+    padding: 32px 56px;
+    column-gap: 56px;
+}
+
+.overlayLineupLeft {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.overlayLineupLeftTitle {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.overlayLineupLeftSection {
+    margin-bottom: 24px;
+}
+
+.overlayLineupSubs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 15px;
+}
+
+.overlayLineupSubItem {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.overlayLineupSubNumber {
+    min-width: 32px;
+    font-weight: 600;
+}
+
+.overlayLineupSubName {
+    text-transform: uppercase;
+}
+
+.overlayLineupSubEmpty {
+    opacity: 0.8;
+    font-style: italic;
+}
+
+.overlayLineupCoachBlock {
+    margin-top: 32px;
+}
+
+.overlayLineupCoachName {
+    margin-top: 8px;
+    font-size: 15px;
+    text-transform: uppercase;
+}
+
+.overlayLineupRight {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.overlayLineupPitch {
+    position: relative;
+    flex: 1;
+    background-image: url('/linemap.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+.overlayLineupPitchCenter {
+    /* dùng ảnh linemap, không cần vẽ bằng CSS nữa */
+}
+
+.overlayLineupPitchSemicircle {
+    /* dùng ảnh linemap, không cần vẽ bằng CSS nữa */
+}
+
+.overlayLineupPitchBox {
+    /* dùng ảnh linemap, không cần vẽ bằng CSS nữa */
+}
+
+.overlayLineupPitchPlayers {
+    position: absolute;
+    inset: 8% 8% 10%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.overlayLineupPlayerRow {
+    display: flex;
+    justify-content: center;
+    gap: 72px;
+}
+
+.overlayLineupPlayer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+
+.overlayLineupPlayerNumber {
+    font-size: 16px;
+    margin-bottom: 4px;
+    color: #ffffff;
+}
+
+.overlayLineupPlayerName {
+    font-size: 15px;
+}

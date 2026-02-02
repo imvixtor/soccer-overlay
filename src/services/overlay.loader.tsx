@@ -10,7 +10,12 @@ export interface OverlayLoaderData {
     match: Awaited<ReturnType<typeof getMatchWithTeams>>['data'];
     matchConfig: Awaited<ReturnType<typeof getMatchConfig>>['data'];
     overlayControl: Awaited<ReturnType<typeof getOverlayControl>>['data'];
-    teams: { id: number; name: string; short_name: string }[];
+    teams: {
+        id: number;
+        name: string;
+        short_name: string;
+        coach: string | null;
+    }[];
     players: {
         id: number;
         full_name: string | null;
@@ -37,7 +42,7 @@ export async function overlayLoader({
         getOverlayControl(userId),
         supabase
             .from('teams')
-            .select('id, name, short_name')
+            .select('id, name, short_name, coach')
             .eq('user_id', userId)
             .order('name'),
     ]);

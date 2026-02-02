@@ -14,8 +14,16 @@ import { deleteMatchEventsByMatchId } from '@/services/match-events.api';
 export type MatchRow = Tables<'matches'>;
 
 export type MatchWithTeams = MatchRow & {
-    home_team_data?: { name: string; short_name: string } | null;
-    away_team_data?: { name: string; short_name: string } | null;
+    home_team_data?: {
+        name: string;
+        short_name: string;
+        coach?: string | null;
+    } | null;
+    away_team_data?: {
+        name: string;
+        short_name: string;
+        coach?: string | null;
+    } | null;
 };
 
 type MatchUpdateFields = TablesUpdate<'matches'>;
@@ -42,8 +50,8 @@ export async function getMatchWithTeams(
         .select(
             `
             *,
-            home_team_data:teams!matches_home_team_fkey(name, short_name),
-            away_team_data:teams!matches_away_team_fkey(name, short_name)
+            home_team_data:teams!matches_home_team_fkey(name, short_name, coach),
+            away_team_data:teams!matches_away_team_fkey(name, short_name, coach)
         `,
         )
         .eq('user_id', userId)

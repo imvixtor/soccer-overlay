@@ -17,6 +17,8 @@ import MatchStatus from '@/components/overlay/MatchStatus/MatchStatus';
 import GlobalClock from '@/components/overlay/GlobalClock/GlobalClock';
 // @ts-expect-error - overlay components are JSX without types
 import EventToast from '@/components/overlay/EventToast/EventToast';
+// @ts-expect-error - overlay components are JSX without types
+import Lineup from '@/components/overlay/Lineup/Lineup';
 import type { MatchWithTeams } from '@/services/matches.api';
 import type { MatchEventRow } from '@/services/match-events.api';
 import './overlay.css';
@@ -104,60 +106,6 @@ function transformEventsForMatchStatus(
             type: EVENT_TYPE_MAP[ev.type] ?? ev.type.toLowerCase(),
         };
     });
-}
-
-function LineupOverlay({
-    match,
-    players,
-    isAway,
-}: {
-    match: MatchWithTeams | null;
-    players: OverlayLoaderData['players'];
-    isAway: boolean;
-}) {
-    if (!match) return null;
-    const teamId = isAway ? match.away_team : match.home_team;
-    const teamData = isAway ? match?.away_team_data : match?.home_team_data;
-    const accentColor = isAway
-        ? (match?.away_color ?? '#FF0000')
-        : (match?.home_color ?? '#0000FF');
-
-    const onFieldPlayers = useMemo(
-        () =>
-            players
-                .filter((p) => p.team_id === teamId && p.is_on_field)
-                .sort((a, b) => a.number - b.number),
-        [players, teamId],
-    );
-
-    const teamName =
-        teamData?.short_name ||
-        teamData?.name ||
-        (isAway ? 'Đội khách' : 'Đội nhà');
-
-    return (
-        <div
-            className="overlay-lineup"
-            style={{ '--team-accent': accentColor } as React.CSSProperties}
-        >
-            <div className="overlay-lineup-header">
-                <span className="overlay-lineup-accent" />
-                <span className="overlay-lineup-title">{teamName}</span>
-            </div>
-            <div className="overlay-lineup-list">
-                {onFieldPlayers.map((p) => (
-                    <div key={p.id} className="overlay-lineup-item">
-                        <span className="overlay-lineup-number">
-                            #{p.number}
-                        </span>
-                        <span className="overlay-lineup-name">
-                            {p.nickname?.trim() || p.full_name?.trim() || '—'}
-                        </span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
 }
 
 export default function OverlayPage() {
@@ -458,9 +406,10 @@ export default function OverlayPage() {
             )}
 
             {ctrl.lineup_enable && (
-                <LineupOverlay
+                <Lineup
                     match={match}
                     players={initial.players}
+                    teams={initial.teams}
                     isAway={ctrl.away_lineup}
                 />
             )}
