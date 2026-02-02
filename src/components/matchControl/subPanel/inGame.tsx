@@ -39,6 +39,7 @@ interface InGamePanelProps {
     match: MatchWithTeams | null;
     userId: string;
     currentMinute: number;
+    matchTime: string;
     halfDuration: number;
     extraDuration: number;
     onMatchUpdated?: () => void;
@@ -65,6 +66,7 @@ export default function InGamePanel({
     match,
     userId,
     currentMinute,
+    matchTime,
     halfDuration,
     extraDuration,
     onMatchUpdated,
@@ -399,9 +401,7 @@ export default function InGamePanel({
                     <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
                         {phase}
                     </span>
-                    <span className="text-sm font-medium">
-                        {currentMinute}'
-                    </span>
+                    <span className="text-sm font-medium">{matchTime}</span>
                 </div>
                 <div className="flex flex-col items-end">
                     <span className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -529,7 +529,19 @@ export default function InGamePanel({
                                             {ev.minute}'
                                         </div>
                                         <div className="col-span-3">
-                                            {EVENT_TYPE_LABELS[ev.type]}
+                                            <span
+                                                className={cn(
+                                                    'text-xs font-medium',
+                                                    ev.type === 'GOAL' &&
+                                                        'text-green-600',
+                                                    ev.type === 'YELLOW' &&
+                                                        'text-yellow-500',
+                                                    ev.type === 'RED' &&
+                                                        'text-red-500',
+                                                )}
+                                            >
+                                                {EVENT_TYPE_LABELS[ev.type]}
+                                            </span>
                                         </div>
                                         <div className="col-span-6">
                                             {label}

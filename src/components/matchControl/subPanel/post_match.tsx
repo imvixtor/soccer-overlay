@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 import type { MatchWithTeams } from '@/services/matches.api';
 import { supabase } from '@/lib/supabase/client';
 import { EVENT_TYPE_LABELS, type EventType } from '@/lib/match-constants';
@@ -207,7 +208,19 @@ export function MatchStats({ match }: MatchStatsProps) {
                                             {ev.minute}'
                                         </div>
                                         <div className="col-span-3">
-                                            {EVENT_TYPE_LABELS[ev.type]}
+                                            <span
+                                                className={cn(
+                                                    'text-xs font-medium',
+                                                    ev.type === 'GOAL' &&
+                                                        'text-green-600',
+                                                    ev.type === 'YELLOW' &&
+                                                        'text-yellow-500',
+                                                    ev.type === 'RED' &&
+                                                        'text-red-500',
+                                                )}
+                                            >
+                                                {EVENT_TYPE_LABELS[ev.type]}
+                                            </span>
                                         </div>
                                         <div className="col-span-7">
                                             <span className="text-muted-foreground">

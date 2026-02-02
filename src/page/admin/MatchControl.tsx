@@ -321,7 +321,6 @@ export default function MatchControlPage() {
                         End match
                     </Button>
                 )}
-                <p>{matchTime}</p>
                 <Button
                     onClick={() => setPendingAction('NEXT_PHASE')}
                     disabled={!canNextPhase}
@@ -345,9 +344,7 @@ export default function MatchControlPage() {
                     matchConfig={matchConfig}
                     teams={teams}
                     userId={userId}
-                    currentMinute={
-                        Number.parseInt(matchTime.split(':')[0] ?? '0', 10) || 0
-                    }
+                    matchTime={matchTime}
                     onMatchUpdated={revalidate}
                 />
             ) : (

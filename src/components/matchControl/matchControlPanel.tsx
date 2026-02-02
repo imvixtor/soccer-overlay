@@ -16,7 +16,7 @@ interface MatchControlPanelProps {
     matchConfig: MatchConfigRow | null;
     teams: TeamOption[];
     userId: string;
-    currentMinute: number;
+    matchTime: string;
     onMatchUpdated?: () => void;
 }
 
@@ -26,7 +26,7 @@ export default function MatchControlPanel({
     matchConfig,
     teams,
     userId,
-    currentMinute,
+    matchTime,
     onMatchUpdated,
 }: MatchControlPanelProps) {
     const halfDuration = matchConfig?.half_duration ?? 45;
@@ -77,12 +77,15 @@ export default function MatchControlPanel({
         phase === 'EXTIME_FIRST_HALF' ||
         phase === 'EXTIME_SECOND_HALF'
     ) {
+        const currentMinute =
+            Number.parseInt(matchTime.split(':')[0] ?? '0', 10) || 0;
         return (
             <InGamePanel
                 phase={phase}
                 match={match}
                 userId={userId}
                 currentMinute={currentMinute}
+                matchTime={matchTime}
                 halfDuration={halfDuration}
                 extraDuration={extraDuration}
                 onMatchUpdated={onMatchUpdated}
