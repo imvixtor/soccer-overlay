@@ -3,12 +3,13 @@ import { type LoaderFunctionArgs } from 'react-router';
 import { getMatchWithTeams } from './matches.api';
 import { getMatchConfig } from './match-config.api';
 import { supabase } from '@/lib/supabase/client';
+import { getOverlayControl } from './control.api';
 
 export async function matchLoader({ context }: LoaderFunctionArgs) {
     const user = context.get(userContext);
     if (!user) throw new Response('Unauthorized', { status: 401 });
 
-    const [matchRes, configRes, teamsRes] = await Promise.all([
+    const [matchRes, configRes, teamsRes, overlayRes] = await Promise.all([
         getMatchWithTeams(user.id),
         getMatchConfig(user.id),
         supabase
@@ -16,11 +17,13 @@ export async function matchLoader({ context }: LoaderFunctionArgs) {
             .select('id, name, short_name')
             .eq('user_id', user.id)
             .order('name'),
+        getOverlayControl(user.id),
     ]);
 
     if (matchRes.error) throw matchRes.error;
     if (configRes.error) throw configRes.error;
     if (teamsRes.error) throw teamsRes.error;
+    if (overlayRes.error) throw overlayRes.error;
 
     const match = matchRes.data;
     const matchConfig = configRes.data;
@@ -55,6 +58,7 @@ export async function matchLoader({ context }: LoaderFunctionArgs) {
         matchConfig,
         teams: teamsRes.data ?? [],
         userId: user.id,
+        overlayControl: overlayRes.data,
         lineup: {
             homeOnField: homeOnFieldRes.count ?? 0,
             awayOnField: awayOnFieldRes.count ?? 0,

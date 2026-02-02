@@ -2,6 +2,7 @@ import type { User } from '@supabase/supabase-js';
 import type { Tables } from '@/types/supabase';
 import type { MatchWithTeams } from '@/services/matches.api';
 import type { MatchConfigRow } from '@/services/match-config.api';
+import type { OverlayControlRow } from '@/services/control.api';
 
 /** User rút gọn từ loader (chỉ cần id). */
 export type LoaderUser = { id: string } | null;
@@ -40,6 +41,7 @@ export interface MatchLoaderData {
     matchConfig: MatchConfigRow | null;
     teams: TeamOption[];
     userId: string;
+    overlayControl: OverlayControlRow | null;
     lineup: {
         homeOnField: number;
         awayOnField: number;

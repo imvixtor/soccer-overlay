@@ -30,6 +30,7 @@ export default function MatchControlPage() {
         teams,
         userId,
         lineup,
+        overlayControl,
     } = useLoaderData() as MatchLoaderData;
     const { revalidate } = useRevalidator();
     const [match, setMatch] = useState(initialMatch);
@@ -348,7 +349,10 @@ export default function MatchControlPage() {
                     onMatchUpdated={revalidate}
                 />
             ) : (
-                <OverlayControlPanel />
+                <OverlayControlPanel
+                    userId={userId}
+                    initialControl={overlayControl}
+                />
             )}
 
             {/* Confirm modal */}
