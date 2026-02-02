@@ -122,7 +122,7 @@ export default function TeamManagementPage() {
             const data = parseTeamsCsv(text, user.id);
             if (data.length === 0) {
                 setImportError(
-                    'No valid rows. Each row needs name and short_name.',
+                    'Không có dòng hợp lệ. Mỗi dòng cần name và short_name.',
                 );
                 return;
             }
@@ -131,7 +131,7 @@ export default function TeamManagementPage() {
             revalidate();
             closeDialog();
         } catch (e) {
-            setImportError(getErrorMessage(e, 'Import failed.'));
+            setImportError(getErrorMessage(e, 'Import thất bại.'));
         } finally {
             setIsImporting(false);
         }
@@ -174,12 +174,12 @@ export default function TeamManagementPage() {
     return (
         <div className={cn('flex flex-col gap-4 sm:gap-5', 'max-w-xl mx-auto')}>
             <h1 className="text-center text-xl font-semibold tracking-tight sm:text-2xl">
-                Teams
+                Đội bóng
             </h1>
 
             {totalCount === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                    No teams yet. Add your first team.
+                    Chưa có đội bóng. Thêm đội đầu tiên.
                 </p>
             ) : (
                 <>
@@ -205,7 +205,7 @@ export default function TeamManagementPage() {
                         currentPage={currentPage}
                         totalPages={totalPages}
                         totalCount={totalCount}
-                        itemLabel="team"
+                        itemLabel="đội"
                         onPrev={() =>
                             setSearchParams({ page: String(currentPage - 1) })
                         }
@@ -216,7 +216,7 @@ export default function TeamManagementPage() {
                 </>
             )}
 
-            {user && <AddFab onClick={openAdd} aria-label="Add team" />}
+            {user && <AddFab onClick={openAdd} aria-label="Thêm đội" />}
 
             <dialog
                 ref={dialogRef}
@@ -232,7 +232,7 @@ export default function TeamManagementPage() {
                 <form onSubmit={handleSubmit} className="flex flex-col">
                     <CardHeader className="shrink-0 px-4 pt-5 pb-1 sm:px-6 sm:pt-6">
                         <CardTitle className="text-lg sm:text-xl">
-                            {editing ? 'Edit team' : 'Add team'}
+                            {editing ? 'Sửa đội bóng' : 'Thêm đội bóng'}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 px-4 pb-6 pt-1 sm:px-6">
@@ -252,11 +252,11 @@ export default function TeamManagementPage() {
                                 isImporting={isImporting}
                                 importError={importError}
                                 importSuccess={importSuccess}
-                                itemLabel="team"
+                                itemLabel="đội"
                             />
                         )}
                         <div className="grid gap-2">
-                            <Label htmlFor="team-name">Name</Label>
+                            <Label htmlFor="team-name">Tên</Label>
                             <Input
                                 id="team-name"
                                 value={name}
@@ -267,7 +267,7 @@ export default function TeamManagementPage() {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="team-short">Short name</Label>
+                            <Label htmlFor="team-short">Tên viết tắt</Label>
                             <Input
                                 id="team-short"
                                 value={shortName}
@@ -278,7 +278,9 @@ export default function TeamManagementPage() {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="team-coach">Coach (optional)</Label>
+                            <Label htmlFor="team-coach">
+                                Huấn luyện viên (tùy chọn)
+                            </Label>
                             <Input
                                 id="team-coach"
                                 value={coach}
@@ -294,7 +296,7 @@ export default function TeamManagementPage() {
                                 onClick={closeDialog}
                                 className="h-10 w-full sm:w-auto"
                             >
-                                Cancel
+                                Hủy
                             </Button>
                             <Button
                                 type="submit"
@@ -304,7 +306,7 @@ export default function TeamManagementPage() {
                                 {isSubmitting ? (
                                     <Spinner className="size-4" />
                                 ) : null}
-                                {editing ? 'Save' : 'Add'}
+                                {editing ? 'Lưu' : 'Thêm'}
                             </Button>
                         </div>
                     </CardContent>
@@ -314,8 +316,8 @@ export default function TeamManagementPage() {
             <DeleteConfirmDialog
                 open={!!deletingTeam}
                 onClose={closeDeleteDialog}
-                title="Delete team?"
-                itemName={deletingTeam?.name ?? 'this team'}
+                title="Xóa đội bóng?"
+                itemName={deletingTeam?.name ?? 'đội này'}
                 onConfirm={confirmDelete}
                 isDeleting={isDeleting}
                 error={deleteError}

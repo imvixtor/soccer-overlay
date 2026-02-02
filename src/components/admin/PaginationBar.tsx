@@ -21,10 +21,9 @@ export function PaginationBar({
     return (
         <div className="flex flex-col items-center gap-3 py-4 sm:flex-row sm:justify-between">
             <p className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages}
+                Trang {currentPage} / {totalPages}
                 <span className="ml-1.5">
-                    ({totalCount} {itemLabel}
-                    {totalCount !== 1 ? 's' : ''})
+                    ({totalCount} {itemLabel})
                 </span>
             </p>
             <div className="flex items-center gap-2">
@@ -36,7 +35,7 @@ export function PaginationBar({
                     className="gap-1"
                 >
                     <ChevronLeft className="size-4" />
-                    Prev
+                    Trước
                 </Button>
                 <Button
                     variant="outline"
@@ -45,7 +44,7 @@ export function PaginationBar({
                     disabled={currentPage >= totalPages}
                     className="gap-1"
                 >
-                    Next
+                    Sau
                     <ChevronRight className="size-4" />
                 </Button>
             </div>

@@ -3,10 +3,10 @@ import { Flag, Monitor, Users, UserCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-    { to: '/admin/control', label: 'Control', icon: Monitor },
-    { to: '/admin/teams', label: 'Teams', icon: Flag },
-    { to: '/admin/players', label: 'Players', icon: Users },
-    { to: '/admin', label: 'Account', icon: UserCircle2 },
+    { to: '/admin/control', label: 'Điều khiển', icon: Monitor },
+    { to: '/admin/teams', label: 'Đội bóng', icon: Flag },
+    { to: '/admin/players', label: 'Cầu thủ', icon: Users },
+    { to: '/admin', label: 'Tài khoản', icon: UserCircle2 },
 ] as const;
 
 export function AdminNavbar() {

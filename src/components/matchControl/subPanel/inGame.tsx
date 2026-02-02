@@ -176,10 +176,10 @@ function InGameEventsTable({
 function teamLabel(p: PlayerRowLite, match: MatchWithTeams | null) {
     if (!match) return '';
     if (p.team_id != null && p.team_id === match.home_team) {
-        return match.home_team_data?.short_name ?? 'HOME';
+        return match.home_team_data?.short_name ?? 'Nhà';
     }
     if (p.team_id != null && p.team_id === match.away_team) {
-        return match.away_team_data?.short_name ?? 'AWAY';
+        return match.away_team_data?.short_name ?? 'Khách';
     }
     return '';
 }

@@ -30,9 +30,7 @@ export function LoginForm({
             // Update this route to redirect to an authenticated route. The user already has an active session.
             location.href = '/admin';
         } catch (error: unknown) {
-            setError(
-                error instanceof Error ? error.message : 'An error occurred',
-            );
+            setError(error instanceof Error ? error.message : 'Đã xảy ra lỗi');
         } finally {
             setIsLoading(false);
         }
@@ -42,7 +40,7 @@ export function LoginForm({
         <div className={cn('flex flex-col gap-6', className)} {...props}>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-2xl">Login</CardTitle>
+                    <CardTitle className="text-2xl">Đăng nhập</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleLogin}>
@@ -60,12 +58,12 @@ export function LoginForm({
                             </div>
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label htmlFor="password">Mật khẩu</Label>
                                     <Link
                                         to="/auth/forgot-password"
                                         className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                                     >
-                                        Forgot your password?
+                                        Quên mật khẩu?
                                     </Link>
                                 </div>
                                 <Input
@@ -87,7 +85,9 @@ export function LoginForm({
                                     className="w-full"
                                     disabled={isLoading}
                                 >
-                                    {isLoading ? 'Logging in...' : 'Login'}
+                                    {isLoading
+                                        ? 'Đang đăng nhập...'
+                                        : 'Đăng nhập'}
                                 </Button>
                                 <Link
                                     to="/"
@@ -98,18 +98,18 @@ export function LoginForm({
                                         size="sm"
                                         className="gap-2 w-full"
                                     >
-                                        Home
+                                        Trang chủ
                                     </Button>
                                 </Link>
                             </div>
                         </div>
                         <div className="mt-4 text-center text-sm">
-                            Don&apos;t have an account?{' '}
+                            Chưa có tài khoản?{' '}
                             <Link
                                 to="/auth/sign-up"
                                 className="underline underline-offset-4"
                             >
-                                Sign up
+                                Đăng ký
                             </Link>
                         </div>
                     </form>

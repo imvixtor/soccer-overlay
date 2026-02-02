@@ -47,11 +47,11 @@ export function DeleteConfirmDialog({
             </CardHeader>
             <CardContent className="space-y-4 px-4 pb-6 pt-1 sm:px-6">
                 <p className="text-sm text-muted-foreground">
-                    Are you sure you want to delete{' '}
+                    Bạn có chắc muốn xóa{' '}
                     <span className="font-medium text-foreground">
                         {itemName}
                     </span>
-                    ? This action cannot be undone.
+                    ? Hành động này không thể hoàn tác.
                 </p>
                 {error && (
                     <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -66,7 +66,7 @@ export function DeleteConfirmDialog({
                         disabled={isDeleting}
                         className="h-10 w-full sm:w-auto"
                     >
-                        Cancel
+                        Hủy
                     </Button>
                     <Button
                         type="button"
@@ -80,7 +80,7 @@ export function DeleteConfirmDialog({
                         ) : (
                             <Trash2 className="size-4" />
                         )}
-                        {isDeleting ? 'Deleting…' : 'Delete'}
+                        {isDeleting ? 'Đang xóa…' : 'Xóa'}
                     </Button>
                 </div>
             </CardContent>

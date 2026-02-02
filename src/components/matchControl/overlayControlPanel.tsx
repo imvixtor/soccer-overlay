@@ -130,8 +130,8 @@ export default function OverlayControlPanel({
                     <CardTitle>Điều khiển Overlay</CardTitle>
                     <CardDescription>
                         Bật/tắt nhanh các phần tử overlay. Chỉ được bật{' '}
-                        <strong>Status</strong> hoặc <strong>Lineup</strong> tại
-                        một thời điểm.
+                        <strong>Trạng thái</strong> hoặc{' '}
+                        <strong>Đội hình</strong> tại một thời điểm.
                     </CardDescription>
                 </div>
                 <CardAction className="flex items-center gap-2">
@@ -165,7 +165,7 @@ export default function OverlayControlPanel({
                             variant="outline"
                             size="icon"
                             onClick={copyOverlayUrl}
-                            title="Copy URL"
+                            title="Sao chép URL"
                         >
                             {copied ? (
                                 <Check className="size-4 text-green-600" />

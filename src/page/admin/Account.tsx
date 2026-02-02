@@ -26,7 +26,7 @@ export default function AccountPage() {
         (user.user_metadata?.full_name as string) ||
         (user.user_metadata?.name as string) ||
         user.email?.split('@')[0] ||
-        'User';
+        'Người dùng';
     const avatarUrl =
         (user.user_metadata?.avatar_url as string) ||
         (user.user_metadata?.picture as string) ||
@@ -46,7 +46,7 @@ export default function AccountPage() {
     return (
         <div className={cn('flex flex-col gap-4 sm:gap-6', 'max-w-xl mx-auto')}>
             <h1 className="text-center text-xl font-semibold tracking-tight sm:text-2xl">
-                Account
+                Tài khoản
             </h1>
             <Card className="overflow-hidden">
                 <CardContent className="space-y-4 py-4">
@@ -79,7 +79,7 @@ export default function AccountPage() {
                                 className="mt-1 w-fit gap-1 text-xs"
                             >
                                 <ShieldCheck className="size-3" />
-                                Verified
+                                Đã xác minh
                             </Badge>
                         </div>
                     </div>
@@ -90,13 +90,13 @@ export default function AccountPage() {
                     />
                     <InfoRow
                         icon={Calendar}
-                        label="Member since"
+                        label="Thành viên từ"
                         value={formatDate(user.created_at)}
                     />
                     {user.last_sign_in_at && (
                         <InfoRow
                             icon={Calendar}
-                            label="Last sign in"
+                            label="Đăng nhập lần cuối"
                             value={formatDate(user.last_sign_in_at)}
                         />
                     )}
@@ -106,7 +106,7 @@ export default function AccountPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-base sm:text-lg">
-                        Security
+                        Bảo mật
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 sm:flex-row sm:gap-4">
@@ -118,7 +118,7 @@ export default function AccountPage() {
                     >
                         <Link to="/auth/update-password?from=admin">
                             <KeyRound className="size-4" />
-                            Change password
+                            Đổi mật khẩu
                         </Link>
                     </Button>
                     <Button
@@ -132,7 +132,7 @@ export default function AccountPage() {
                         ) : (
                             <LogOut className="size-4" />
                         )}
-                        {isLoggingOut ? 'Signing out…' : 'Sign out'}
+                        {isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất'}
                     </Button>
                 </CardContent>
             </Card>

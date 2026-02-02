@@ -27,7 +27,7 @@ export function CsvImportBlock({
     return (
         <div className="space-y-2 rounded-lg border border-dashed bg-muted/30 p-3">
             <p className="text-xs font-medium text-muted-foreground">
-                Import from CSV
+                Nhập từ CSV
             </p>
             <input
                 ref={fileInputRef}
@@ -49,7 +49,7 @@ export function CsvImportBlock({
                     ) : (
                         <Upload className="size-4" />
                     )}
-                    Import CSV
+                    Nhập CSV
                 </Button>
                 <Button
                     type="button"
@@ -59,7 +59,7 @@ export function CsvImportBlock({
                     className="gap-2 w-full"
                 >
                     <Download className="size-4" />
-                    Template
+                    Mẫu
                 </Button>
             </div>
             {importError && (
@@ -67,8 +67,7 @@ export function CsvImportBlock({
             )}
             {importSuccess !== null && (
                 <p className="text-sm text-primary">
-                    Imported {importSuccess} {itemLabel}
-                    {importSuccess !== 1 ? 's' : ''}.
+                    Đã nhập {importSuccess} {itemLabel}.
                 </p>
             )}
         </div>

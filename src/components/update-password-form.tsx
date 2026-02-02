@@ -35,9 +35,7 @@ export function UpdatePasswordForm({
             // Update this route to redirect to an authenticated route. The user already has an active session.
             location.href = '/admin';
         } catch (error: unknown) {
-            setError(
-                error instanceof Error ? error.message : 'An error occurred',
-            );
+            setError(error instanceof Error ? error.message : 'Đã xảy ra lỗi');
         } finally {
             setIsLoading(false);
         }
@@ -47,22 +45,20 @@ export function UpdatePasswordForm({
         <div className={cn('flex flex-col gap-6', className)} {...props}>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-2xl">
-                        Reset Your Password
-                    </CardTitle>
+                    <CardTitle className="text-2xl">Đặt lại mật khẩu</CardTitle>
                     <CardDescription>
-                        Please enter your new password below.
+                        Vui lòng nhập mật khẩu mới bên dưới.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleForgotPassword}>
                         <div className="flex flex-col gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="password">New password</Label>
+                                <Label htmlFor="password">Mật khẩu mới</Label>
                                 <Input
                                     id="password"
                                     type="password"
-                                    placeholder="New password"
+                                    placeholder="Mật khẩu mới"
                                     required
                                     value={password}
                                     onChange={(e) =>
@@ -80,8 +76,8 @@ export function UpdatePasswordForm({
                                     disabled={isLoading}
                                 >
                                     {isLoading
-                                        ? 'Saving...'
-                                        : 'Save new password'}
+                                        ? 'Đang lưu...'
+                                        : 'Lưu mật khẩu mới'}
                                 </Button>
                                 {fromAdmin && (
                                     <Link
@@ -93,7 +89,7 @@ export function UpdatePasswordForm({
                                             size="sm"
                                             className="gap-2 w-full"
                                         >
-                                            Return to admin
+                                            Quay lại quản trị
                                         </Button>
                                     </Link>
                                 )}

@@ -217,14 +217,14 @@ export default function MatchControlPage() {
     return (
         <div className="space-y-4">
             <h1 className="text-center text-xl font-semibold tracking-tight sm:text-2xl">
-                Match Control
+                Điều khiển trận đấu
             </h1>
 
             {/* View switcher: Match panel | Overlay panel */}
             <div className="flex justify-center">
                 <div
                     role="tablist"
-                    aria-label="Switch between Match panel and Overlay panel"
+                    aria-label="Chuyển giữa Bảng điều khiển trận và Bảng overlay"
                     className="inline-flex rounded-lg border bg-muted/50 p-1"
                 >
                     <Button
@@ -241,7 +241,7 @@ export default function MatchControlPage() {
                         )}
                     >
                         <LayoutDashboard className="size-4" />
-                        Match panel
+                        Bảng trận đấu
                     </Button>
                     <Button
                         variant="ghost"
@@ -257,7 +257,7 @@ export default function MatchControlPage() {
                         )}
                     >
                         <Monitor className="size-4" />
-                        Overlay panel
+                        Bảng overlay
                     </Button>
                 </div>
             </div>
@@ -295,21 +295,21 @@ export default function MatchControlPage() {
                         variant="destructive"
                         onClick={() => setPendingAction('RESET_MATCH')}
                     >
-                        Reset match
+                        Reset trận
                     </Button>
                 ) : (
                     <Button
                         variant="destructive"
                         onClick={() => setPendingAction('END_MATCH')}
                     >
-                        End match
+                        Kết thúc trận
                     </Button>
                 )}
                 <Button
                     onClick={() => setPendingAction('NEXT_PHASE')}
                     disabled={!canNextPhase}
                 >
-                    Next phase
+                    Giai đoạn tiếp
                 </Button>
             </div>
 
@@ -359,7 +359,7 @@ export default function MatchControlPage() {
                                 next ? ` (${PHASE_LABELS[next]})` : ''
                             }?`}
                         {pendingAction === 'END_MATCH' &&
-                            'Kết thúc trận đấu và chuyển sang Post-match?'}
+                            'Kết thúc trận đấu và chuyển sang Kết thúc?'}
                         {pendingAction === 'RESET_MATCH' &&
                             'Reset trận đấu, xoá toàn bộ sự kiện và đưa cầu thủ về trạng thái mặc định?'}
                     </p>

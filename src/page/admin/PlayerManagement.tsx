@@ -119,7 +119,7 @@ export default function PlayerManagementPage() {
             const data = parsePlayersCsv(text, teams, user.id);
             if (data.length === 0) {
                 setImportError(
-                    'No valid rows. Each row needs full_name and number.',
+                    'Không có dòng hợp lệ. Mỗi dòng cần full_name và number.',
                 );
                 return;
             }
@@ -128,7 +128,7 @@ export default function PlayerManagementPage() {
             revalidate();
             closeDialog();
         } catch (e) {
-            setImportError(getErrorMessage(e, 'Import failed.'));
+            setImportError(getErrorMessage(e, 'Import thất bại.'));
         } finally {
             setIsImporting(false);
         }
@@ -144,7 +144,7 @@ export default function PlayerManagementPage() {
         setIsSubmitting(true);
         const num = parseInt(number, 10);
         if (!Number.isFinite(num) || num < 0) {
-            setError('Number must be a non‑negative integer.');
+            setError('Số áo phải là số nguyên không âm.');
             setIsSubmitting(false);
             return;
         }
@@ -195,11 +195,11 @@ export default function PlayerManagementPage() {
     return (
         <div className={cn('flex flex-col gap-4 sm:gap-5', 'max-w-xl mx-auto')}>
             <h1 className="text-center text-xl font-semibold tracking-tight sm:text-2xl">
-                Players
+                Cầu thủ
             </h1>
 
             <div className="grid gap-2">
-                <Label htmlFor="player-filter-team">Team</Label>
+                <Label htmlFor="player-filter-team">Đội bóng</Label>
                 <select
                     id="player-filter-team"
                     value={teamFilter}
@@ -209,7 +209,7 @@ export default function PlayerManagementPage() {
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                     )}
                 >
-                    <option value="all">All teams</option>
+                    <option value="all">Tất cả đội</option>
                     {teams.map((t) => (
                         <option key={t.id} value={t.id}>
                             {t.name} ({t.short_name})
@@ -221,8 +221,8 @@ export default function PlayerManagementPage() {
             {totalCount === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                     {teamFilter !== 'all'
-                        ? 'No players in this team.'
-                        : 'No players yet. Add your first player.'}
+                        ? 'Chưa có cầu thủ trong đội này.'
+                        : 'Chưa có cầu thủ. Thêm cầu thủ đầu tiên.'}
                 </p>
             ) : (
                 <>
@@ -232,7 +232,7 @@ export default function PlayerManagementPage() {
                                 <EntityListCard
                                     title={
                                         capitalizeName(p.full_name ?? '') ||
-                                        '(No name)'
+                                        '(Chưa có tên)'
                                     }
                                     badge={
                                         p.teams?.short_name ||
@@ -252,14 +252,14 @@ export default function PlayerManagementPage() {
                         currentPage={currentPage}
                         totalPages={totalPages}
                         totalCount={totalCount}
-                        itemLabel="player"
+                        itemLabel="cầu thủ"
                         onPrev={() => setPage(currentPage - 1)}
                         onNext={() => setPage(currentPage + 1)}
                     />
                 </>
             )}
 
-            {user && <AddFab onClick={openAdd} aria-label="Add player" />}
+            {user && <AddFab onClick={openAdd} aria-label="Thêm cầu thủ" />}
 
             <dialog
                 ref={dialogRef}
@@ -275,7 +275,7 @@ export default function PlayerManagementPage() {
                 <form onSubmit={handleSubmit} className="flex flex-col">
                     <CardHeader className="shrink-0 px-4 pt-5 pb-1 sm:px-6 sm:pt-6">
                         <CardTitle className="text-lg sm:text-xl">
-                            {editing ? 'Edit player' : 'Add player'}
+                            {editing ? 'Sửa cầu thủ' : 'Thêm cầu thủ'}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 px-4 pb-6 pt-1 sm:px-6">
@@ -295,11 +295,11 @@ export default function PlayerManagementPage() {
                                 isImporting={isImporting}
                                 importError={importError}
                                 importSuccess={importSuccess}
-                                itemLabel="player"
+                                itemLabel="cầu thủ"
                             />
                         )}
                         <div className="grid gap-2">
-                            <Label htmlFor="player-full-name">Full name</Label>
+                            <Label htmlFor="player-full-name">Họ tên</Label>
                             <Input
                                 id="player-full-name"
                                 value={fullName}
@@ -310,7 +310,7 @@ export default function PlayerManagementPage() {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="player-number">Number</Label>
+                            <Label htmlFor="player-number">Số áo</Label>
                             <Input
                                 id="player-number"
                                 type="number"
@@ -324,7 +324,7 @@ export default function PlayerManagementPage() {
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="player-nickname">
-                                Nickname (optional)
+                                Biệt danh (tùy chọn)
                             </Label>
                             <Input
                                 id="player-nickname"
@@ -335,7 +335,9 @@ export default function PlayerManagementPage() {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="player-team">Team (optional)</Label>
+                            <Label htmlFor="player-team">
+                                Đội bóng (tùy chọn)
+                            </Label>
                             <select
                                 id="player-team"
                                 value={teamId}
@@ -345,7 +347,7 @@ export default function PlayerManagementPage() {
                                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                                 )}
                             >
-                                <option value="">No team</option>
+                                <option value="">Không có đội</option>
                                 {teams.map((t) => (
                                     <option key={t.id} value={t.id}>
                                         {t.name} ({t.short_name})
@@ -360,7 +362,7 @@ export default function PlayerManagementPage() {
                                 onClick={closeDialog}
                                 className="h-10 w-full sm:w-auto"
                             >
-                                Cancel
+                                Hủy
                             </Button>
                             <Button
                                 type="submit"
@@ -370,7 +372,7 @@ export default function PlayerManagementPage() {
                                 {isSubmitting ? (
                                     <Spinner className="size-4" />
                                 ) : null}
-                                {editing ? 'Save' : 'Add'}
+                                {editing ? 'Lưu' : 'Thêm'}
                             </Button>
                         </div>
                     </CardContent>
@@ -380,12 +382,12 @@ export default function PlayerManagementPage() {
             <DeleteConfirmDialog
                 open={!!deletingPlayer}
                 onClose={closeDeleteDialog}
-                title="Delete player?"
+                title="Xóa cầu thủ?"
                 itemName={
                     deletingPlayer
                         ? capitalizeName(deletingPlayer.full_name ?? '') ||
-                          '(No name)'
-                        : 'this player'
+                          '(Chưa có tên)'
+                        : 'cầu thủ này'
                 }
                 onConfirm={confirmDelete}
                 isDeleting={isDeleting}

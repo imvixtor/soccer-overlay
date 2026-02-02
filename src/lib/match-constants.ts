@@ -187,26 +187,26 @@ export function getBreadcrumbPhases(current: MatchPhase): MatchPhase[] {
 }
 
 export const PHASE_LABELS: Record<MatchPhase, string> = {
-    INITIATION: 'Initiation',
-    PREPARATION: 'Preparation',
-    PRE_MATCH: 'Pre-match',
-    FIRST_HALF: 'First half',
-    HALFTIME: 'Half-time',
-    SECOND_HALF: 'Second half',
-    FULLTIME: 'Full-time',
-    EXTIME_FIRST_HALF: 'Ex 1st half',
-    EXTIME_HALF_TIME: 'Ex half-time',
-    EXTIME_SECOND_HALF: 'Ex 2nd half',
-    PENALTY_SHOOTOUT: 'Penalty shootout',
-    POST_MATCH: 'Post-match',
+    INITIATION: 'Khởi tạo',
+    PREPARATION: 'Chuẩn bị',
+    PRE_MATCH: 'Trước trận',
+    FIRST_HALF: 'Hiệp 1',
+    HALFTIME: 'Nghỉ giữa hiệp',
+    SECOND_HALF: 'Hiệp 2',
+    FULLTIME: 'Hết giờ',
+    EXTIME_FIRST_HALF: 'HP 1',
+    EXTIME_HALF_TIME: 'Nghỉ HP',
+    EXTIME_SECOND_HALF: 'HP 2',
+    PENALTY_SHOOTOUT: 'Luân lưu',
+    POST_MATCH: 'Kết thúc',
 };
 
 /** Order of event types (aligned with DB enum EVENT_TYPE). */
 export const EVENT_TYPE_ORDER: EventType[] = ['GOAL', 'YELLOW', 'RED', 'SUB'];
 
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
-    GOAL: 'Goal',
-    YELLOW: 'Yellow card',
-    RED: 'Red card',
-    SUB: 'Substitution',
+    GOAL: 'Bàn thắng',
+    YELLOW: 'Thẻ vàng',
+    RED: 'Thẻ đỏ',
+    SUB: 'Thay người',
 };

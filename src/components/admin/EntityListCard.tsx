@@ -55,7 +55,7 @@ export function EntityListCard({
                             variant="ghost"
                             size="icon-sm"
                             onClick={onPlayers}
-                            aria-label="Players"
+                            aria-label="Cầu thủ"
                         >
                             <Users className="size-4" />
                         </Button>
@@ -65,7 +65,7 @@ export function EntityListCard({
                             variant="ghost"
                             size="icon-sm"
                             onClick={onEdit}
-                            aria-label="Edit"
+                            aria-label="Sửa"
                         >
                             <Pencil className="size-4" />
                         </Button>
@@ -75,7 +75,7 @@ export function EntityListCard({
                             variant="ghost"
                             size="icon-sm"
                             onClick={onDelete}
-                            aria-label="Delete"
+                            aria-label="Xóa"
                             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                         >
                             <Trash2 className="size-4" />

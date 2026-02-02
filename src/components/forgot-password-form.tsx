@@ -36,9 +36,7 @@ export function ForgotPasswordForm({
             if (error) throw error;
             setSuccess(true);
         } catch (error: unknown) {
-            setError(
-                error instanceof Error ? error.message : 'An error occurred',
-            );
+            setError(error instanceof Error ? error.message : 'Đã xảy ra lỗi');
         } finally {
             setIsLoading(false);
         }
@@ -50,17 +48,17 @@ export function ForgotPasswordForm({
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-2xl">
-                            Check Your Email
+                            Kiểm tra Email
                         </CardTitle>
                         <CardDescription>
-                            Password reset instructions sent
+                            Đã gửi hướng dẫn đặt lại mật khẩu
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
-                            If you registered using your email and password, you
-                            will receive a password reset email. You can close
-                            this tab and check your inbox.
+                            Nếu bạn đăng ký bằng email và mật khẩu, bạn sẽ nhận
+                            được email đặt lại mật khẩu. Bạn có thể đóng tab này
+                            và kiểm tra hộp thư.
                         </p>
                         <Link to="/" className="inline-block w-full mt-2">
                             <Button
@@ -68,7 +66,7 @@ export function ForgotPasswordForm({
                                 size="sm"
                                 className="gap-2 w-full"
                             >
-                                Home
+                                Trang chủ
                             </Button>
                         </Link>
                     </CardContent>
@@ -77,11 +75,10 @@ export function ForgotPasswordForm({
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-2xl">
-                            Reset Your Password
+                            Đặt lại mật khẩu
                         </CardTitle>
                         <CardDescription>
-                            Type in your email and we&apos;ll send you a link to
-                            reset your password
+                            Nhập email và chúng tôi sẽ gửi link đặt lại mật khẩu
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -112,8 +109,8 @@ export function ForgotPasswordForm({
                                         disabled={isLoading}
                                     >
                                         {isLoading
-                                            ? 'Sending...'
-                                            : 'Send reset email'}
+                                            ? 'Đang gửi...'
+                                            : 'Gửi email đặt lại'}
                                     </Button>
                                     <Link
                                         to="/"
@@ -124,18 +121,18 @@ export function ForgotPasswordForm({
                                             size="sm"
                                             className="gap-2 w-full"
                                         >
-                                            Home
+                                            Trang chủ
                                         </Button>
                                     </Link>
                                 </div>
                             </div>
                             <div className="mt-4 text-center text-sm">
-                                Already have an account?{' '}
+                                Đã có tài khoản?{' '}
                                 <Link
                                     to="/auth/login"
                                     className="underline underline-offset-4"
                                 >
-                                    Login
+                                    Đăng nhập
                                 </Link>
                             </div>
                         </form>

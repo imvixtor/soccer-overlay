@@ -29,7 +29,7 @@ export function SignUpForm({
         setError(null);
 
         if (password !== repeatPassword) {
-            setError('Passwords do not match');
+            setError('Mật khẩu không khớp');
             return;
         }
         setIsLoading(true);
@@ -42,9 +42,7 @@ export function SignUpForm({
             if (error) throw error;
             setSuccess(true);
         } catch (error: unknown) {
-            setError(
-                error instanceof Error ? error.message : 'An error occurred',
-            );
+            setError(error instanceof Error ? error.message : 'Đã xảy ra lỗi');
         } finally {
             setIsLoading(false);
         }
@@ -56,17 +54,17 @@ export function SignUpForm({
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-2xl">
-                            Thank you for signing up!
+                            Cảm ơn bạn đã đăng ký!
                         </CardTitle>
                         <CardDescription>
-                            Check your email to confirm
+                            Kiểm tra email để xác nhận tài khoản
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
-                            You've successfully signed up. Please check your
-                            email to confirm your account before signing in. You
-                            can close this tab now.
+                            Bạn đã đăng ký thành công. Vui lòng kiểm tra email
+                            để xác nhận tài khoản trước khi đăng nhập. Bạn có
+                            thể đóng tab này.
                         </p>
                         <Link to="/" className="inline-block w-full mt-2">
                             <Button
@@ -74,7 +72,7 @@ export function SignUpForm({
                                 size="sm"
                                 className="gap-2 w-full"
                             >
-                                Home
+                                Trang chủ
                             </Button>
                         </Link>
                     </CardContent>
@@ -82,8 +80,8 @@ export function SignUpForm({
             ) : (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-2xl">Sign up</CardTitle>
-                        <CardDescription>Create a new account</CardDescription>
+                        <CardTitle className="text-2xl">Đăng ký</CardTitle>
+                        <CardDescription>Tạo tài khoản mới</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSignUp}>
@@ -104,7 +102,7 @@ export function SignUpForm({
                                 <div className="grid gap-2">
                                     <div className="flex items-center">
                                         <Label htmlFor="password">
-                                            Password
+                                            Mật khẩu
                                         </Label>
                                     </div>
                                     <Input
@@ -120,7 +118,7 @@ export function SignUpForm({
                                 <div className="grid gap-2">
                                     <div className="flex items-center">
                                         <Label htmlFor="repeat-password">
-                                            Repeat Password
+                                            Nhập lại mật khẩu
                                         </Label>
                                     </div>
                                     <Input
@@ -145,8 +143,8 @@ export function SignUpForm({
                                         disabled={isLoading}
                                     >
                                         {isLoading
-                                            ? 'Creating an account...'
-                                            : 'Sign up'}
+                                            ? 'Đang tạo tài khoản...'
+                                            : 'Đăng ký'}
                                     </Button>
                                     <Link
                                         to="/"
@@ -157,18 +155,18 @@ export function SignUpForm({
                                             size="sm"
                                             className="gap-2 w-full"
                                         >
-                                            Home
+                                            Trang chủ
                                         </Button>
                                     </Link>
                                 </div>
                             </div>
                             <div className="mt-4 text-center text-sm">
-                                Already have an account?{' '}
+                                Đã có tài khoản?{' '}
                                 <Link
                                     to="/auth/login"
                                     className="underline underline-offset-4"
                                 >
-                                    Login
+                                    Đăng nhập
                                 </Link>
                             </div>
                         </form>
