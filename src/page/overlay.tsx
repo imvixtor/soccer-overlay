@@ -6,6 +6,7 @@ import {
     getTimeOffset,
     isClockStoppedPhase,
     formatMatchTimeSeconds,
+    EVENT_TYPE_LABELS,
 } from '@/lib/match-constants';
 import type { MatchPhase } from '@/lib/match-constants';
 // @ts-expect-error - overlay components are JSX without types
@@ -14,6 +15,8 @@ import ScoreBug from '@/components/overlay/ScoreBug/ScoreBug';
 import MatchStatus from '@/components/overlay/MatchStatus/MatchStatus';
 // @ts-expect-error - overlay components are JSX without types
 import GlobalClock from '@/components/overlay/GlobalClock/GlobalClock';
+// @ts-expect-error - overlay components are JSX without types
+import EventToast from '@/components/overlay/EventToast/EventToast';
 import type { MatchWithTeams } from '@/services/matches.api';
 import type { MatchEventRow } from '@/services/match-events.api';
 import './overlay.css';
@@ -33,6 +36,35 @@ type PlayerForEvents = {
     nickname: string | null;
     team_id: number | null;
 };
+
+const TOAST_DURATION_MS = 6000;
+
+export type ToastItem = {
+    id: number;
+    type: string;
+    message: string;
+};
+
+function eventToToastItem(
+    ev: MatchEventRow,
+    playerById: Map<number, PlayerForEvents>,
+): ToastItem {
+    const p = playerById.get(ev.player_id);
+    const pOut = ev.player_out_id ? playerById.get(ev.player_out_id) : null;
+    const typeLabel =
+        EVENT_TYPE_LABELS[ev.type as keyof typeof EVENT_TYPE_LABELS] ?? ev.type;
+    const playerLabel = p
+        ? `#${p.number} ${p.nickname?.trim() || p.full_name?.trim() || ''}`
+        : `#${ev.player_id}`;
+    const playerOutLabel = pOut
+        ? `#${pOut.number} ${pOut.nickname?.trim() || pOut.full_name?.trim() || ''}`
+        : null;
+    const message =
+        ev.type === 'SUB' && playerOutLabel
+            ? `${ev.minute}' ${playerOutLabel} ra, ${playerLabel} vào`
+            : `${ev.minute}' ${playerLabel}`;
+    return { id: ev.id, type: typeLabel, message };
+}
 
 export type MatchStatusEvent = {
     id: number;
@@ -83,7 +115,8 @@ function LineupOverlay({
     players: OverlayLoaderData['players'];
     isAway: boolean;
 }) {
-    const teamId = isAway ? match?.away_team : match?.home_team;
+    if (!match) return null;
+    const teamId = isAway ? match.away_team : match.home_team;
     const teamData = isAway ? match?.away_team_data : match?.home_team_data;
     const accentColor = isAway
         ? (match?.away_color ?? '#FF0000')
@@ -138,6 +171,7 @@ export default function OverlayPage() {
     const [matchEvents, setMatchEvents] = useState<MatchEventRow[]>(
         initial.matchEvents ?? [],
     );
+    const [toastQueue, setToastQueue] = useState<ToastItem[]>([]);
 
     const phase = (match?.phase ?? DEFAULT_PHASE) as MatchPhase;
     const matchConfig = initial.matchConfig;
@@ -151,12 +185,7 @@ export default function OverlayPage() {
     }, [initial.players]);
 
     const matchStatusEvents = useMemo(
-        () =>
-            transformEventsForMatchStatus(
-                matchEvents,
-                playerById,
-                match,
-            ),
+        () => transformEventsForMatchStatus(matchEvents, playerById, match),
         [matchEvents, playerById, match],
     );
 
@@ -202,14 +231,17 @@ export default function OverlayPage() {
                 (payload) => {
                     const newRow = payload.new as MatchEventRow;
                     setMatchEvents((prev) => {
+                        if (prev.some((e) => e.id === newRow.id)) return prev;
                         const next = [...prev, newRow].sort(
                             (a, b) =>
                                 a.minute - b.minute ||
-                                new Date(a.created_at).getTime() -
-                                    new Date(b.created_at).getTime(),
+                                new Date(a.created_at || 0).getTime() -
+                                    new Date(b.created_at || 0).getTime(),
                         );
                         return next;
                     });
+                    const toastItem = eventToToastItem(newRow, playerById);
+                    setToastQueue((prev) => [...prev, toastItem]);
                 },
             )
             .on(
@@ -234,6 +266,16 @@ export default function OverlayPage() {
         };
     }, [match?.id]);
 
+    // Hàng chờ EventToast: hiển thị 6s mỗi sự kiện, xong mới hiện sự kiện tiếp
+    const currentToast = toastQueue[0] ?? null;
+    useEffect(() => {
+        if (!currentToast) return;
+        const timer = window.setTimeout(() => {
+            setToastQueue((prev) => prev.slice(1));
+        }, TOAST_DURATION_MS);
+        return () => window.clearTimeout(timer);
+    }, [currentToast?.id]);
+
     // Realtime: overlay_control
     useEffect(() => {
         if (!initial.userId) return;
@@ -248,9 +290,10 @@ export default function OverlayPage() {
                     filter: `user_id=eq.${initial.userId}`,
                 },
                 (payload) => {
-                    setOverlayControl(
-                        payload.new as OverlayLoaderData['overlayControl'],
-                    );
+                    if (payload.new)
+                        setOverlayControl(
+                            payload.new as OverlayLoaderData['overlayControl'],
+                        );
                 },
             )
             .subscribe();
@@ -350,6 +393,14 @@ export default function OverlayPage() {
     return (
         <div className="overlay-page">
             {ctrl.clock_enable && <GlobalClock />}
+
+            {currentToast && (
+                <EventToast
+                    key={currentToast.id}
+                    type={currentToast.type}
+                    message={currentToast.message}
+                />
+            )}
 
             {ctrl.scorebug_enable && (
                 <ScoreBug

@@ -9,10 +9,17 @@
 
 /* CSS variables cho overlay components (ScoreBug, MatchStatus, GlobalClock) */
 .overlay-page {
-    --color-dark-navy: #0f172a;
-    --color-teal: #0d9488;
-    --color-dark-green-85: rgba(6, 78, 59, 0.85);
-    --color-green: #059669;
+    /* Colors with 100% Opacity */
+    --color-dark-navy: #0b0c30;
+    --color-teal: #00aa8e;
+    --color-green: #00ce37;
+    --color-red: #e91212;
+    --color-yellow: #f9ff48;
+
+    /* Colors with Opacity */
+    --color-dark-green-85: rgba(0, 97, 81, 0.9);
+    --color-white-20: rgba(255, 255, 255, 0.2);
+    --color-dark-gray-75: rgba(30, 30, 30, 0.75);
 }
 
 /* Lineup overlay - danh sách cầu thủ ra sân */
