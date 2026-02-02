@@ -16,6 +16,8 @@ function ScoreBug({
     awayTeam = 'TEAM 2',
     homeScore = 0,
     awayScore = 0,
+    penaltyHome = 0,
+    penaltyAway = 0,
     matchTime = 0,
     phase = 'FIRST_HALF',
     halfDuration = 45,
@@ -23,6 +25,11 @@ function ScoreBug({
     homeTeamAccentColor = '#0000FF',
     awayTeamAccentColor = '#FF0000',
 }) {
+    const isPenaltyPhase = phase === 'PENALTY_SHOOTOUT';
+    const hideClock = phase === 'PENALTY_SHOOTOUT' || phase === 'POST_MATCH';
+    const displayHomeScore = isPenaltyPhase ? penaltyHome : homeScore;
+    const displayAwayScore = isPenaltyPhase ? penaltyAway : awayScore;
+
     const regulationEnd = getRegulationEndSeconds(
         phase,
         halfDuration,
@@ -42,6 +49,7 @@ function ScoreBug({
             <div className={styles.leagueName}>
                 {league}
                 {agency && <span> - {agency}</span>}
+                {isPenaltyPhase && <span> - Penalty</span>}
             </div>
             <div className={styles.scoreBug}>
                 <div className={styles.teamSection}>
@@ -50,11 +58,11 @@ function ScoreBug({
                         style={{ backgroundColor: homeTeamAccentColor }}
                     ></div>
                     <div className={styles.teamName}>{homeTeam}</div>
-                    <div className={styles.scoreBox}>{homeScore}</div>
+                    <div className={styles.scoreBox}>{displayHomeScore}</div>
                 </div>
 
                 <div className={styles.teamSection}>
-                    <div className={styles.scoreBox}>{awayScore}</div>
+                    <div className={styles.scoreBox}>{displayAwayScore}</div>
                     <div className={styles.teamName}>{awayTeam}</div>
                     <div
                         className={styles.teamAccent}
@@ -62,12 +70,17 @@ function ScoreBug({
                     ></div>
                 </div>
 
-                <div className={styles.matchTimeSection}>{mainTimeStr}</div>
-
-                {additionalTimeStr && (
-                    <div className={styles.additionalTimeSection}>
-                        +{additionalTimeStr}
-                    </div>
+                {!hideClock && (
+                    <>
+                        <div className={styles.matchTimeSection}>
+                            {mainTimeStr}
+                        </div>
+                        {additionalTimeStr && (
+                            <div className={styles.additionalTimeSection}>
+                                +{additionalTimeStr}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </>

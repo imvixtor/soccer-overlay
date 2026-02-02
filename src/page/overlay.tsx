@@ -37,7 +37,7 @@ type PlayerForEvents = {
     team_id: number | null;
 };
 
-const TOAST_DURATION_MS = 6000;
+const TOAST_DURATION_MS = 10000;
 
 export type ToastItem = {
     id: number;
@@ -409,6 +409,8 @@ export default function OverlayPage() {
                     awayTeam={awayName}
                     homeScore={match?.home_score ?? 0}
                     awayScore={match?.away_score ?? 0}
+                    penaltyHome={match?.penalty_home ?? 0}
+                    penaltyAway={match?.penalty_away ?? 0}
                     matchTime={scoreBugMatchTimeSeconds}
                     phase={phase}
                     halfDuration={halfDuration}
@@ -421,12 +423,15 @@ export default function OverlayPage() {
             {ctrl.match_status_enable && (
                 <MatchStatus
                     matchTime={displayMatchTime}
+                    showMatchTime={phase !== 'POST_MATCH'}
                     period={periodLabel}
                     league={league}
                     homeTeam={homeName}
                     awayTeam={awayName}
                     homeScore={match?.home_score ?? 0}
                     awayScore={match?.away_score ?? 0}
+                    penaltyHome={match?.penalty_home ?? 0}
+                    penaltyAway={match?.penalty_away ?? 0}
                     events={matchStatusEvents}
                     homeTeamAccentColor={homeColor}
                     awayTeamAccentColor={awayColor}
