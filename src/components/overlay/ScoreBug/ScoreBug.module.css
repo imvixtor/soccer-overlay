@@ -12,6 +12,8 @@
     font-size: 12px;
     font-weight: 500;
     color: #ffffff;
+    opacity: 0;
+    animation: overlayScoreFadeIn 0.4s ease-out forwards;
 }
 
 .scoreBug {
@@ -26,6 +28,19 @@
     font-weight: 600;
     font-size: 20px;
     color: #ffffff;
+    opacity: 0;
+    animation: overlayScoreFadeIn 0.4s ease-out forwards;
+}
+
+@keyframes overlayScoreFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .teamSection {

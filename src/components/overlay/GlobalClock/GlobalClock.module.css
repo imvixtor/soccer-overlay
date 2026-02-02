@@ -7,6 +7,8 @@
     background: rgba(30, 30, 30, 0.9);
     border-radius: 6px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    animation: overlayClockFadeIn 0.4s ease-out forwards;
 }
 
 .time {
@@ -14,4 +16,15 @@
     font-weight: 600;
     color: #ffffff;
     letter-spacing: 1px;
+}
+
+@keyframes overlayClockFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

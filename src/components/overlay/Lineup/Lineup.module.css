@@ -25,6 +25,8 @@
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
     overflow: hidden;
     background: var(--color-dark-green-85);
+    opacity: 0;
+    animation: overlayLineupFadeIn 0.45s ease-out forwards;
 }
 
 .overlayLineupTopbar {
@@ -186,4 +188,15 @@
 
 .overlayLineupPlayerName {
     font-size: 15px;
+}
+
+@keyframes overlayLineupFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -52%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
 }

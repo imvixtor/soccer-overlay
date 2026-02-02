@@ -2,11 +2,13 @@
     position: fixed;
     bottom: 32px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, 0);
     width: 1024px;
     z-index: 10;
     font-family: 'Fira Sans Condensed', sans-serif;
     color: #ffffff;
+    opacity: 0;
+    animation: overlayStatusFadeIn 0.4s ease-out forwards;
 }
 
 .topBar {
@@ -89,6 +91,17 @@
     display: flex;
     align-items: center;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes overlayStatusFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 16px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
 
 .teamSection {
