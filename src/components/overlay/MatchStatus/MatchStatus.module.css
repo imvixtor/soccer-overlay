@@ -1,0 +1,100 @@
+.matchStatus {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1024px;
+    z-index: 10;
+    font-family: 'Fira Sans Condensed', sans-serif;
+    color: #ffffff;
+}
+
+.topBar {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-dark-navy);
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 14px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.middleBar {
+    background-color: var(--color-dark-green-85);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    font-size: 16px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.eventsLeft {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.eventsRight {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.eventItem {
+    display: inline-block;
+}
+
+.eventType {
+    text-transform: uppercase;
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.bottomBar {
+    background-color: var(--color-dark-navy);
+    height: 54px;
+    font-size: 28px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.teamSection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.teamName {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.teamAccent {
+    width: 16px;
+    height: 100%;
+}
+
+.scoreBox {
+    background-color: var(--color-teal);
+    width: 120px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 32px;
+}

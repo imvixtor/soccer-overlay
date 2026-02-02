@@ -1,0 +1,17 @@
+.clock {
+    position: fixed;
+    bottom: 32px;
+    left: 64px;
+    z-index: 1000;
+    padding: 5px 12px;
+    background: rgba(30, 30, 30, 0.9);
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.time {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 1px;
+}

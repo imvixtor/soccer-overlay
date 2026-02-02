@@ -1,0 +1,83 @@
+.leagueName {
+    position: absolute;
+    top: 38px;
+    left: 64px;
+    background-color: var(--color-dark-navy);
+    width: 450px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.scoreBug {
+    position: fixed;
+    top: 64px;
+    left: 64px;
+    z-index: 10;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-weight: 600;
+    font-size: 20px;
+    color: #ffffff;
+}
+
+.teamSection {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.teamAccent {
+    width: 8px;
+    height: 100%;
+}
+
+.teamName {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 180px;
+    height: 100%;
+    background: var(--color-dark-navy);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.scoreBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 100%;
+    font-size: 24px;
+    background: var(--color-teal);
+}
+
+.matchTimeSection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: var(--color-teal);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 80px;
+}
+
+.additionalTimeSection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: var(--color-green);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 80px;
+}
