@@ -20,6 +20,7 @@ import {
     resetMatchWithPlayers,
 } from '@/services/matches.api';
 import { supabase } from '@/lib/supabase/client';
+import { upsertOverlayControl } from '@/services/control.api';
 
 const DEFAULT_PHASE: MatchPhase = 'INITIATION';
 
@@ -160,10 +161,84 @@ export default function MatchControlPage() {
 
     const canNextPhase = Boolean(next) && isPreparationReady;
 
+    const autoAdjustOverlayForPhase = async (newPhase: MatchPhase) => {
+        if (!userId) return;
+
+        try {
+            // Reset / giai đoạn khởi tạo: chỉ bật đồng hồ, tắt mọi overlay khác
+            if (newPhase === 'INITIATION' || newPhase === 'PREPARATION') {
+                await upsertOverlayControl(userId, {
+                    clock_enable: true,
+                    scorebug_enable: false,
+                    match_status_enable: false,
+                    lineup_enable: false,
+                    away_lineup: false,
+                });
+                return;
+            }
+
+            // Vào hiệp đấu: tự động bật cả scorebug và match status
+            if (
+                newPhase === 'FIRST_HALF' ||
+                newPhase === 'SECOND_HALF' ||
+                newPhase === 'EXTIME_FIRST_HALF' ||
+                newPhase === 'EXTIME_SECOND_HALF'
+            ) {
+                await upsertOverlayControl(userId, {
+                    scorebug_enable: true,
+                    match_status_enable: true,
+                });
+                return;
+            }
+
+            // Nghỉ giữa hiệp: tắt scorebug, bật match status, tắt lineup
+            if (newPhase === 'HALFTIME' || newPhase === 'EXTIME_HALF_TIME') {
+                await upsertOverlayControl(userId, {
+                    scorebug_enable: false,
+                    match_status_enable: true,
+                    lineup_enable: false,
+                });
+                return;
+            }
+
+            // Hết giờ (FULLTIME): tắt scorebug, bật match status
+            if (newPhase === 'FULLTIME') {
+                await upsertOverlayControl(userId, {
+                    scorebug_enable: false,
+                    match_status_enable: true,
+                    lineup_enable: false,
+                });
+                return;
+            }
+
+            // Luân lưu: bật cả scorebug và match status, tắt lineup
+            if (newPhase === 'PENALTY_SHOOTOUT') {
+                await upsertOverlayControl(userId, {
+                    scorebug_enable: true,
+                    match_status_enable: true,
+                    lineup_enable: false,
+                });
+                return;
+            }
+
+            // Kết thúc trận: tắt scorebug, bật match status
+            if (newPhase === 'POST_MATCH') {
+                await upsertOverlayControl(userId, {
+                    scorebug_enable: false,
+                    match_status_enable: true,
+                    lineup_enable: false,
+                });
+            }
+        } catch {
+            // Ignore overlay auto-adjust errors
+        }
+    };
+
     const handleNextPhase = async () => {
         if (!match?.id || !next || !isPreparationReady) return;
         const { error } = await updateMatchPhase(match.id, next);
         if (!error) {
+            await autoAdjustOverlayForPhase(next);
             revalidate();
         }
     };
@@ -172,6 +247,7 @@ export default function MatchControlPage() {
         if (!match?.id) return;
         const { error } = await updateMatchPhase(match.id, 'POST_MATCH');
         if (!error) {
+            await autoAdjustOverlayForPhase('POST_MATCH');
             revalidate();
         }
     };
@@ -180,6 +256,8 @@ export default function MatchControlPage() {
         if (!match?.id) return;
         const { error } = await resetMatchWithPlayers(match.id, userId);
         if (!error) {
+            // Sau khi reset, quay về INITIATION và chỉ hiển thị đồng hồ
+            await autoAdjustOverlayForPhase('INITIATION');
             revalidate();
         }
     };
