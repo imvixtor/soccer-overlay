@@ -22,4 +22,13 @@
     --color-dark-gray-75: rgba(30, 30, 30, 0.75);
 }
 
+/* Wrapper fade cho overlay components: fade-out khi ẩn */
+.overlay-fade {
+    opacity: 1;
+    transition: opacity 0.35s ease-out;
+}
+.overlay-fade.overlay-fade--out {
+    opacity: 0;
+}
+
 /* (Styles cho Lineup đã chuyển sang Lineup.module.css) */

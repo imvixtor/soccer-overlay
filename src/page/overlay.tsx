@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, type ReactNode } from 'react';
 import { useLoaderData } from 'react-router';
 import type { OverlayLoaderData } from '@/services/overlay.loader';
 import { supabase } from '@/lib/supabase/client';
@@ -24,6 +24,56 @@ import type { MatchWithTeams } from '@/services/matches.api';
 import type { MatchEventRow } from '@/services/match-events.api';
 import { updateOverlayControl } from '@/services/control.api';
 import './overlay.css';
+
+const FADE_DURATION_MS = 350;
+
+/** Wrapper giữ component trong DOM khi ẩn để chạy animation fade-out, sau đó mới unmount. */
+function OverlayFade({
+    show,
+    children,
+    durationMs = FADE_DURATION_MS,
+}: {
+    show: boolean;
+    children: ReactNode;
+    durationMs?: number;
+}) {
+    const [shouldRender, setShouldRender] = useState(show);
+    const [isExiting, setIsExiting] = useState(false);
+
+    useEffect(() => {
+        if (show) {
+            const raf = requestAnimationFrame(() => {
+                setShouldRender(true);
+                setIsExiting(false);
+            });
+            return () => cancelAnimationFrame(raf);
+        }
+    }, [show]);
+
+    useEffect(() => {
+        if (!show && shouldRender) {
+            const raf = requestAnimationFrame(() => setIsExiting(true));
+            const t = window.setTimeout(
+                () => setShouldRender(false),
+                durationMs,
+            );
+            return () => {
+                cancelAnimationFrame(raf);
+                window.clearTimeout(t);
+            };
+        }
+    }, [show, shouldRender, durationMs]);
+
+    if (!shouldRender) return null;
+    return (
+        <div
+            className={`overlay-fade${isExiting ? ' overlay-fade--out' : ''}`}
+            style={{ transitionDuration: `${durationMs}ms` }}
+        >
+            {children}
+        </div>
+    );
+}
 
 const DEFAULT_PHASE: MatchPhase = 'INITIATION';
 
@@ -273,6 +323,23 @@ export default function OverlayPage() {
 
     // Hàng chờ EventToast: hiển thị 6s mỗi sự kiện, xong mới hiện sự kiện tiếp
     const currentToast = toastQueue[0] ?? null;
+    // Giữ toast cũ trong lúc fade-out để không fade div rỗng
+    const [displayToast, setDisplayToast] = useState<ToastItem | null>(null);
+    useEffect(() => {
+        if (currentToast) {
+            const raf = requestAnimationFrame(() =>
+                setDisplayToast(currentToast),
+            );
+            return () => cancelAnimationFrame(raf);
+        }
+        if (displayToast) {
+            const t = window.setTimeout(
+                () => setDisplayToast(null),
+                FADE_DURATION_MS,
+            );
+            return () => window.clearTimeout(t);
+        }
+    }, [currentToast, displayToast]);
     useEffect(() => {
         if (!currentToast) return;
         const timer = window.setTimeout(() => {
@@ -469,17 +536,21 @@ export default function OverlayPage() {
 
     return (
         <div className="overlay-page">
-            {ctrl.clock_enable && <GlobalClock />}
+            <OverlayFade show={!!ctrl.clock_enable}>
+                <GlobalClock />
+            </OverlayFade>
 
-            {currentToast && (
-                <EventToast
-                    key={currentToast.id}
-                    type={currentToast.type}
-                    message={currentToast.message}
-                />
-            )}
+            <OverlayFade show={!!currentToast}>
+                {(currentToast ?? displayToast) && (
+                    <EventToast
+                        key={(currentToast ?? displayToast)!.id}
+                        type={(currentToast ?? displayToast)!.type}
+                        message={(currentToast ?? displayToast)!.message}
+                    />
+                )}
+            </OverlayFade>
 
-            {ctrl.scorebug_enable && (
+            <OverlayFade show={!!ctrl.scorebug_enable}>
                 <ScoreBug
                     league={league}
                     homeTeam={homeName}
@@ -495,9 +566,9 @@ export default function OverlayPage() {
                     homeTeamAccentColor={homeColor}
                     awayTeamAccentColor={awayColor}
                 />
-            )}
+            </OverlayFade>
 
-            {ctrl.match_status_enable && (
+            <OverlayFade show={!!ctrl.match_status_enable}>
                 <MatchStatus
                     matchTime={displayMatchTime}
                     showMatchTime={phase !== 'POST_MATCH'}
@@ -513,16 +584,16 @@ export default function OverlayPage() {
                     homeTeamAccentColor={homeColor}
                     awayTeamAccentColor={awayColor}
                 />
-            )}
+            </OverlayFade>
 
-            {ctrl.lineup_enable && (
+            <OverlayFade show={!!ctrl.lineup_enable}>
                 <Lineup
                     match={match}
                     players={players}
                     teams={initial.teams}
                     isAway={ctrl.away_lineup}
                 />
-            )}
+            </OverlayFade>
         </div>
     );
 }
