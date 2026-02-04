@@ -114,6 +114,7 @@ export default function OverlayPage() {
     const [overlayControl, setOverlayControl] = useState(
         initial.overlayControl,
     );
+    const [matchConfig, setMatchConfig] = useState(initial.matchConfig);
     const [matchTime, setMatchTime] = useState('00:00');
     const [matchTimeSeconds, setMatchTimeSeconds] = useState(0);
     const [matchEvents, setMatchEvents] = useState<MatchEventRow[]>(
@@ -123,7 +124,6 @@ export default function OverlayPage() {
     const [toastQueue, setToastQueue] = useState<ToastItem[]>([]);
 
     const phase = (match?.phase ?? DEFAULT_PHASE) as MatchPhase;
-    const matchConfig = initial.matchConfig;
     const halfDuration = matchConfig?.half_duration ?? 45;
     const extraDuration = matchConfig?.extra_duration ?? 15;
 
@@ -138,17 +138,16 @@ export default function OverlayPage() {
         [matchEvents, playerById, match],
     );
 
-    // Khi không có match: xóa events để tránh hiển thị stale
+    // Khi có match mới: reset players về initial data (nếu cần)
     useEffect(() => {
-        if (!match?.id) {
-            setMatchEvents([]);
-            setToastQueue([]);
-            setPlayers([]);
-        } else {
-            // Khi có match mới: reset players về initial data
-            setPlayers(initial.players);
+        if (!match?.id) return;
+        if (players.length !== initial.players.length) {
+            // Đưa vào microtask để tránh setState sync trong effect body
+            queueMicrotask(() => {
+                setPlayers(initial.players);
+            });
         }
-    }, [match?.id, initial.players]);
+    }, [match?.id, initial.players, players.length]);
 
     // Realtime: players
     useEffect(() => {
@@ -269,7 +268,7 @@ export default function OverlayPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [match?.id]);
+    }, [match?.id, playerById]);
 
     // Hàng chờ EventToast: hiển thị 6s mỗi sự kiện, xong mới hiện sự kiện tiếp
     const currentToast = toastQueue[0] ?? null;
@@ -279,7 +278,7 @@ export default function OverlayPage() {
             setToastQueue((prev) => prev.slice(1));
         }, TOAST_DURATION_MS);
         return () => window.clearTimeout(timer);
-    }, [currentToast?.id]);
+    }, [currentToast]);
 
     // Realtime: overlay_control
     useEffect(() => {
@@ -307,6 +306,35 @@ export default function OverlayPage() {
         };
     }, [initial.userId]);
 
+    // Realtime: match_config (đồng bộ thời lượng hiệp, hiệp phụ, penalty...)
+    useEffect(() => {
+        if (!initial.userId) return;
+
+        const channel = supabase
+            .channel(`overlay-match-config:${initial.userId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'match_config',
+                    filter: `user_id=eq.${initial.userId}`,
+                },
+                (payload) => {
+                    if (payload.new) {
+                        setMatchConfig(
+                            payload.new as OverlayLoaderData['matchConfig'],
+                        );
+                    }
+                },
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [initial.userId]);
+
     // Giá trị hiển thị khi đồng hồ dừng – tính từ match_time trong DB
     const stoppedPhaseTime =
         isClockStoppedPhase(phase) && match
@@ -328,7 +356,7 @@ export default function OverlayPage() {
             const updateTime = () => {
                 const now = Date.now();
                 const elapsed = Math.floor((now - start) / 1000);
-                const totalSeconds = elapsed + timeOffset;
+                const totalSeconds = Math.max(0, elapsed + timeOffset);
                 setMatchTimeSeconds(totalSeconds);
                 const minutes = Math.floor(totalSeconds / 60);
                 const secs = totalSeconds % 60;
@@ -342,12 +370,14 @@ export default function OverlayPage() {
         }
         const stop = new Date(match.stop_at).getTime();
         const elapsed = Math.floor((stop - start) / 1000);
-        const totalSeconds = elapsed + timeOffset;
-        setMatchTimeSeconds(totalSeconds);
+        const totalSeconds = Math.max(0, elapsed + timeOffset);
         const minutes = Math.floor(totalSeconds / 60);
         const secs = totalSeconds % 60;
         const formatted = `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        queueMicrotask(() => setMatchTime(formatted));
+        queueMicrotask(() => {
+            setMatchTimeSeconds(totalSeconds);
+            setMatchTime(formatted);
+        });
     }, [match?.start_at, match?.stop_at, phase, halfDuration, extraDuration]);
 
     const displayMatchTime = stoppedPhaseTime ?? noStartTime ?? matchTime;

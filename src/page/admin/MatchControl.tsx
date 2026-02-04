@@ -107,7 +107,7 @@ export default function MatchControlPage() {
             const updateTime = () => {
                 const now = Date.now();
                 const elapsed = Math.floor((now - start) / 1000); // seconds
-                const totalSeconds = elapsed + timeOffset;
+                const totalSeconds = Math.max(0, elapsed + timeOffset);
                 const minutes = Math.floor(totalSeconds / 60);
                 const seconds = totalSeconds % 60;
                 setMatchTime(
@@ -123,7 +123,7 @@ export default function MatchControlPage() {
             // Nếu stop_at không null: hiển thị thời gian đã dừng (từ start_at đến stop_at + thời gian bù)
             const stop = new Date(match.stop_at).getTime();
             const elapsed = Math.floor((stop - start) / 1000); // seconds
-            const totalSeconds = elapsed + timeOffset;
+            const totalSeconds = Math.max(0, elapsed + timeOffset);
             const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
             setMatchTime(
