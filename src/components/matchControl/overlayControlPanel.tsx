@@ -13,15 +13,18 @@ import { Copy, Check } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import type { OverlayControlRow } from '@/services/control.api';
 import { upsertOverlayControl } from '@/services/control.api';
+import type { MatchPhase } from '@/lib/match-constants';
 
 interface OverlayControlPanelProps {
     userId: string;
     initialControl: OverlayControlRow | null;
+    phase?: MatchPhase;
 }
 
 export default function OverlayControlPanel({
     userId,
     initialControl,
+    phase,
 }: OverlayControlPanelProps) {
     const [control, setControl] = useState<OverlayControlRow | null>(
         initialControl,
@@ -60,7 +63,10 @@ export default function OverlayControlPanel({
         return () => window.clearTimeout(id);
     }, [success]);
 
+    // Disable các nút overlay (trừ clock) khi ở phase INITIATION hoặc PREPARATION
+    const isInitOrPrepPhase = phase === 'INITIATION' || phase === 'PREPARATION';
     const disabled = !hasInitialized || isSaving;
+    const disabledExceptClock = disabled || isInitOrPrepPhase;
 
     const updateControl = async (
         updates: Partial<
@@ -98,7 +104,6 @@ export default function OverlayControlPanel({
 
             const { data, error } = await upsertOverlayControl(userId, next);
             if (error) {
-                // eslint-disable-next-line no-console
                 console.error('update overlay_control error', error);
                 setError('Không thể lưu cấu hình overlay. Vui lòng thử lại.');
                 return;
@@ -132,6 +137,12 @@ export default function OverlayControlPanel({
                         Bật/tắt nhanh các phần tử overlay. Chỉ được bật{' '}
                         <strong>Trạng thái</strong> hoặc{' '}
                         <strong>Đội hình</strong> tại một thời điểm.
+                        {isInitOrPrepPhase && (
+                            <span className="block mt-1 text-xs text-muted-foreground">
+                                Ở giai đoạn khởi tạo/chuẩn bị, chỉ có thể điều
+                                khiển đồng hồ.
+                            </span>
+                        )}
                     </CardDescription>
                 </div>
                 <CardAction className="flex items-center gap-2">
@@ -213,7 +224,7 @@ export default function OverlayControlPanel({
                                         : 'outline'
                                 }
                                 aria-pressed={current.scorebug_enable}
-                                disabled={disabled}
+                                disabled={disabledExceptClock}
                                 className="justify-between"
                                 onClick={() =>
                                     updateControl({
@@ -235,7 +246,7 @@ export default function OverlayControlPanel({
                                         : 'outline'
                                 }
                                 aria-pressed={current.match_status_enable}
-                                disabled={disabled}
+                                disabled={disabledExceptClock}
                                 className="justify-between"
                                 onClick={() =>
                                     updateControl({
@@ -256,7 +267,7 @@ export default function OverlayControlPanel({
                                     isLineupHomeActive ? 'default' : 'outline'
                                 }
                                 aria-pressed={isLineupHomeActive}
-                                disabled={disabled}
+                                disabled={disabledExceptClock}
                                 className="justify-between"
                                 onClick={() => {
                                     if (isLineupHomeActive) {
@@ -281,7 +292,7 @@ export default function OverlayControlPanel({
                                     isLineupAwayActive ? 'default' : 'outline'
                                 }
                                 aria-pressed={isLineupAwayActive}
-                                disabled={disabled}
+                                disabled={disabledExceptClock}
                                 className="justify-between"
                                 onClick={() => {
                                     if (isLineupAwayActive) {

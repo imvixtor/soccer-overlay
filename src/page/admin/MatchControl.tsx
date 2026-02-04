@@ -379,6 +379,9 @@ export default function MatchControlPage() {
                     <Button
                         variant="destructive"
                         onClick={() => setPendingAction('END_MATCH')}
+                        disabled={
+                            phase === 'INITIATION' || phase === 'PREPARATION'
+                        }
                     >
                         Kết thúc trận
                     </Button>
@@ -413,6 +416,7 @@ export default function MatchControlPage() {
                 <OverlayControlPanel
                     userId={userId}
                     initialControl={overlayControl}
+                    phase={phase}
                 />
             )}
 
