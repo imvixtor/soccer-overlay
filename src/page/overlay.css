@@ -17,7 +17,7 @@
     --color-yellow: #f9ff48;
 
     /* Colors with Opacity */
-    --color-dark-green-85: rgba(0, 97, 81, 0.9);
+    --color-dark-green-85: rgba(0, 97, 81, 0.85);
     --color-white-20: rgba(255, 255, 255, 0.2);
     --color-dark-gray-75: rgba(30, 30, 30, 0.75);
 }
