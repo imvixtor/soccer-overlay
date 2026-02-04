@@ -138,16 +138,15 @@ export default function OverlayPage() {
         [matchEvents, playerById, match],
     );
 
-    // Khi có match mới: reset players về initial data (nếu cần)
+    // Khi không có match: xóa dữ liệu để tránh hiển thị stale
     useEffect(() => {
-        if (!match?.id) return;
-        if (players.length !== initial.players.length) {
-            // Đưa vào microtask để tránh setState sync trong effect body
-            queueMicrotask(() => {
-                setPlayers(initial.players);
-            });
-        }
-    }, [match?.id, initial.players, players.length]);
+        if (match?.id) return;
+        queueMicrotask(() => {
+            setMatchEvents([]);
+            setToastQueue([]);
+            setPlayers([]);
+        });
+    }, [match?.id]);
 
     // Realtime: players
     useEffect(() => {
