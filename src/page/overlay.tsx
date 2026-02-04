@@ -422,7 +422,13 @@ export default function OverlayPage() {
                           ? 'PENALTY'
                           : phase === 'POST_MATCH'
                             ? 'KẾT THÚC'
-                            : phase;
+                            : phase === 'INITIATION'
+                              ? 'SẮP BẮT ĐẦU'
+                              : phase === 'PREPARATION'
+                                ? 'CHUẨN BỊ'
+                                : phase === 'PRE_MATCH'
+                                  ? 'TRƯỚC TRẬN'
+                                  : phase;
 
     return (
         <div className="overlay-page">

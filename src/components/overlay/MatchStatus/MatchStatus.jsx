@@ -24,44 +24,42 @@ function MatchStatus({
         <div className={styles.matchStatus}>
             <div className={styles.topBar}>
                 {showMatchTime && <span>{matchTime}</span>}
-                {showMatchTime && <span> - </span>}
-                <span>{period}</span>
-                <span> - {league}</span>
-                {agency && <span> - {agency}</span>}
+                {showMatchTime && <span>&nbsp;-&nbsp;</span>}
+                <span>{period.toLowerCase()}</span>
+                <span>&nbsp;-&nbsp;{league}</span>
+                {agency && <span>&nbsp;-&nbsp;{agency}</span>}
             </div>
 
-            {events.length > 0 && (
-                <div className={styles.middleBar}>
-                    <div className={styles.eventsLeft}>
-                        {homeEvents.map((event) => (
-                            <div key={event.id} className={styles.eventItem}>
-                                {event.minute}&apos; {event.playerName}{' '}
-                                {event.shirtNumber}
-                                {event.type && event.type !== 'goal' && (
-                                    <span className={styles.eventType}>
-                                        {' '}
-                                        ({event.type})
-                                    </span>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                    <div className={styles.eventsRight}>
-                        {awayEvents.map((event) => (
-                            <div key={event.id} className={styles.eventItem}>
-                                {event.minute}&apos; {event.playerName}{' '}
-                                {event.shirtNumber}
-                                {event.type && event.type !== 'goal' && (
-                                    <span className={styles.eventType}>
-                                        {' '}
-                                        ({event.type})
-                                    </span>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+            <div className={styles.middleBar}>
+                <div className={styles.eventsLeft}>
+                    {homeEvents.map((event) => (
+                        <div key={event.id} className={styles.eventItem}>
+                            {event.minute}&apos; {event.playerName}{' '}
+                            {event.shirtNumber}
+                            {event.type && event.type !== 'goal' && (
+                                <span className={styles.eventType}>
+                                    {' '}
+                                    ({event.type})
+                                </span>
+                            )}
+                        </div>
+                    ))}
                 </div>
-            )}
+                <div className={styles.eventsRight}>
+                    {awayEvents.map((event) => (
+                        <div key={event.id} className={styles.eventItem}>
+                            {event.minute}&apos; {event.playerName}{' '}
+                            {event.shirtNumber}
+                            {event.type && event.type !== 'goal' && (
+                                <span className={styles.eventType}>
+                                    {' '}
+                                    ({event.type})
+                                </span>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
 
             <div className={styles.bottomBar}>
                 <div className={styles.teamSection}>
