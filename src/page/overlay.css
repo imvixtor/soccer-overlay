@@ -1,4 +1,12 @@
 /* Trang overlay - nền trong suốt để dùng với OBS/stream */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
 .overlay-page {
     position: fixed;
     inset: 0;
