@@ -1,10 +1,11 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useLoaderData } from 'react-router';
 import type { OverlayLoaderData } from '@/services/overlay.loader';
 import { supabase } from '@/lib/supabase/client';
 import {
     getTimeOffset,
     isClockStoppedPhase,
+    isClockRunningPhase,
     formatMatchTimeSeconds,
     EVENT_TYPE_LABELS,
 } from '@/lib/match-constants';
@@ -21,6 +22,7 @@ import EventToast from '@/components/overlay/EventToast/EventToast';
 import Lineup from '@/components/overlay/Lineup/Lineup';
 import type { MatchWithTeams } from '@/services/matches.api';
 import type { MatchEventRow } from '@/services/match-events.api';
+import { updateOverlayControl } from '@/services/control.api';
 import './overlay.css';
 
 const DEFAULT_PHASE: MatchPhase = 'INITIATION';
@@ -304,6 +306,41 @@ export default function OverlayPage() {
             supabase.removeChannel(channel);
         };
     }, [initial.userId]);
+
+    // Tự động tắt match status sau 10s khi đang ở trong hiệp đấu
+    const hideMatchStatusTimerRef = useRef<number | null>(null);
+    const isInGamePhase = isClockRunningPhase(phase);
+    const shouldShowMatchStatus = overlayControl?.match_status_enable ?? false;
+
+    useEffect(() => {
+        // Clear timer cũ nếu có
+        if (hideMatchStatusTimerRef.current !== null) {
+            clearTimeout(hideMatchStatusTimerRef.current);
+            hideMatchStatusTimerRef.current = null;
+        }
+
+        // Chỉ tự động tắt khi đang ở trong hiệp đấu và match_status được bật
+        if (isInGamePhase && shouldShowMatchStatus && initial.userId) {
+            // Tự động tắt match_status sau 8s
+            hideMatchStatusTimerRef.current = window.setTimeout(async () => {
+                hideMatchStatusTimerRef.current = null;
+                // Cập nhật local state ngay để overlay ẩn status (realtime có thể không gửi event về chính client vừa gửi)
+                setOverlayControl((prev) =>
+                    prev ? { ...prev, match_status_enable: false } : prev,
+                );
+                await updateOverlayControl(initial.userId, {
+                    match_status_enable: false,
+                });
+            }, 8000);
+        }
+
+        return () => {
+            if (hideMatchStatusTimerRef.current !== null) {
+                clearTimeout(hideMatchStatusTimerRef.current);
+                hideMatchStatusTimerRef.current = null;
+            }
+        };
+    }, [shouldShowMatchStatus, isInGamePhase, phase, initial.userId]);
 
     // Realtime: match_config (đồng bộ thời lượng hiệp, hiệp phụ, penalty...)
     useEffect(() => {

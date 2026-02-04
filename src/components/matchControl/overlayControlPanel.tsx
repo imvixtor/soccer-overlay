@@ -14,6 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import type { OverlayControlRow } from '@/services/control.api';
 import { upsertOverlayControl } from '@/services/control.api';
 import type { MatchPhase } from '@/lib/match-constants';
+import { supabase } from '@/lib/supabase/client';
 
 interface OverlayControlPanelProps {
     userId: string;
@@ -56,6 +57,30 @@ export default function OverlayControlPanel({
         setControl(initialControl);
         setHasInitialized(true);
     }, [initialControl]);
+
+    // Realtime: đồng bộ overlay_control khi bị thay đổi từ nơi khác (vd. overlay tự tắt match status sau 8s)
+    useEffect(() => {
+        if (!userId) return;
+        const channel = supabase
+            .channel(`overlay-control-panel:${userId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'overlay_control',
+                    filter: `user_id=eq.${userId}`,
+                },
+                (payload) => {
+                    if (payload.new)
+                        setControl(payload.new as OverlayControlRow);
+                },
+            )
+            .subscribe();
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [userId]);
 
     useEffect(() => {
         if (!success) return;
