@@ -353,6 +353,10 @@ export default function InGamePanel({
             setFormSuccess('Đã thêm bàn thắng');
             await loadEvents();
             onMatchUpdated?.();
+            // Đóng modal sau khi thành công
+            setTimeout(() => {
+                closeModal();
+            }, 0);
         } catch (e) {
             setFormError(
                 e instanceof Error ? e.message : 'Không thêm được bàn thắng',
@@ -381,6 +385,10 @@ export default function InGamePanel({
             setFormSuccess('Đã thêm thẻ phạt');
             await loadEvents();
             onMatchUpdated?.();
+            // Đóng modal sau khi thành công
+            setTimeout(() => {
+                closeModal();
+            }, 0);
         } catch (e) {
             setFormError(
                 e instanceof Error ? e.message : 'Không thêm được thẻ phạt',
@@ -436,6 +444,10 @@ export default function InGamePanel({
             await loadPlayers();
             await loadEvents();
             onMatchUpdated?.();
+            // Đóng modal sau khi thành công
+            setTimeout(() => {
+                closeModal();
+            }, 0);
         } catch (e) {
             setFormError(
                 e instanceof Error ? e.message : 'Không thêm được thay người',
@@ -941,6 +953,10 @@ export default function InGamePanel({
                                                 'Đã cập nhật đồng hồ',
                                             );
                                             onMatchUpdated?.();
+                                            // Đóng modal sau khi thành công
+                                            setTimeout(() => {
+                                                closeModal();
+                                            }, 500);
                                         } catch (e) {
                                             setFormError(
                                                 e instanceof Error
