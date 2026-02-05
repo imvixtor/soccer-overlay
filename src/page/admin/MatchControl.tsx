@@ -177,7 +177,16 @@ export default function MatchControlPage() {
                 return;
             }
 
-            // Vào hiệp đấu: tự động bật cả scorebug và match status
+            // Trước trận: tắt lineup (cho phép bật thủ công trong phase này)
+            if (newPhase === 'PRE_MATCH') {
+                await upsertOverlayControl(userId, {
+                    lineup_enable: false,
+                    away_lineup: false,
+                });
+                return;
+            }
+
+            // Vào hiệp đấu: tự động bật scorebug và match status, tắt lineup
             if (
                 newPhase === 'FIRST_HALF' ||
                 newPhase === 'SECOND_HALF' ||
@@ -187,6 +196,8 @@ export default function MatchControlPage() {
                 await upsertOverlayControl(userId, {
                     scorebug_enable: true,
                     match_status_enable: true,
+                    lineup_enable: false,
+                    away_lineup: false,
                 });
                 return;
             }
@@ -197,36 +208,40 @@ export default function MatchControlPage() {
                     scorebug_enable: false,
                     match_status_enable: true,
                     lineup_enable: false,
+                    away_lineup: false,
                 });
                 return;
             }
 
-            // Hết giờ (FULLTIME): tắt scorebug, bật match status
+            // Hết giờ (FULLTIME): tắt scorebug, bật match status, tắt lineup
             if (newPhase === 'FULLTIME') {
                 await upsertOverlayControl(userId, {
                     scorebug_enable: false,
                     match_status_enable: true,
                     lineup_enable: false,
+                    away_lineup: false,
                 });
                 return;
             }
 
-            // Luân lưu: bật cả scorebug và match status, tắt lineup
+            // Luân lưu: bật scorebug và match status, tắt lineup
             if (newPhase === 'PENALTY_SHOOTOUT') {
                 await upsertOverlayControl(userId, {
                     scorebug_enable: true,
                     match_status_enable: true,
                     lineup_enable: false,
+                    away_lineup: false,
                 });
                 return;
             }
 
-            // Kết thúc trận: tắt scorebug, bật match status
+            // Kết thúc trận: tắt scorebug, bật match status, tắt lineup
             if (newPhase === 'POST_MATCH') {
                 await upsertOverlayControl(userId, {
                     scorebug_enable: false,
                     match_status_enable: true,
                     lineup_enable: false,
+                    away_lineup: false,
                 });
             }
         } catch {
@@ -410,6 +425,7 @@ export default function MatchControlPage() {
                     teams={teams}
                     userId={userId}
                     matchTime={matchTime}
+                    overlayControl={overlayControl}
                     onMatchUpdated={revalidate}
                 />
             ) : (

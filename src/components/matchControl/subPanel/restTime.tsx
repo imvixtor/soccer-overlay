@@ -6,16 +6,22 @@ import { MatchStats } from './post_match';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { updateMatch } from '@/services/matches.api';
+import { upsertOverlayControl } from '@/services/control.api';
+import type { OverlayControlRow } from '@/services/control.api';
 
 interface RestTimePanelProps {
     phase: MatchPhase;
     match: MatchWithTeams | null;
+    userId?: string;
+    overlayControl?: OverlayControlRow | null;
     onMatchUpdated?: () => void;
 }
 
 export default function RestTimePanel({
     phase,
     match,
+    userId,
+    overlayControl,
     onMatchUpdated,
 }: RestTimePanelProps) {
     const matchId = match?.id ?? null;
@@ -34,7 +40,44 @@ export default function RestTimePanel({
         match?.away_color ?? '#000000',
     );
     const [isSaving, setIsSaving] = useState(false);
+    const [isLineupSaving, setIsLineupSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const current = overlayControl ?? {
+        lineup_enable: false,
+        away_lineup: false,
+    };
+    const isLineupHomeActive = current.lineup_enable && !current.away_lineup;
+    const isLineupAwayActive = current.lineup_enable && current.away_lineup;
+
+    const updateLineup = async (showHome: boolean) => {
+        if (!userId) return;
+        setIsLineupSaving(true);
+        try {
+            const base: OverlayControlRow = overlayControl ?? {
+                id: 0,
+                user_id: userId,
+                match_status_enable: false,
+                lineup_enable: false,
+                scorebug_enable: true,
+                clock_enable: true,
+                away_lineup: false,
+            };
+            const isActive = showHome ? isLineupHomeActive : isLineupAwayActive;
+            const next: OverlayControlRow = isActive
+                ? { ...base, lineup_enable: false }
+                : {
+                      ...base,
+                      match_status_enable: false,
+                      lineup_enable: true,
+                      away_lineup: !showHome,
+                  };
+            const { error } = await upsertOverlayControl(userId, next);
+            if (!error) onMatchUpdated?.();
+        } finally {
+            setIsLineupSaving(false);
+        }
+    };
 
     useEffect(() => {
         setHomeColor(match?.home_color ?? '#ffffff');
@@ -131,6 +174,43 @@ export default function RestTimePanel({
                         </div>
                     </div>
                 </div>
+
+                {phase === 'PRE_MATCH' && userId && (
+                    <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button
+                                type="button"
+                                variant={
+                                    isLineupHomeActive ? 'default' : 'outline'
+                                }
+                                size="sm"
+                                onClick={() => updateLineup(true)}
+                                disabled={isLineupSaving}
+                                className="gap-2"
+                            >
+                                {isLineupSaving && (
+                                    <Spinner className="size-4" />
+                                )}
+                                {isLineupHomeActive ? 'Ẩn' : 'Hiện'} lineup{' '}
+                                {homeTeamLabel}
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={
+                                    isLineupAwayActive ? 'default' : 'outline'
+                                }
+                                size="sm"
+                                onClick={() => updateLineup(false)}
+                                disabled={isLineupSaving}
+                                className="gap-2"
+                            >
+                                {isLineupAwayActive ? 'Ẩn' : 'Hiện'} lineup{' '}
+                                {awayTeamLabel}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 <MatchStats match={match} />
             </CardContent>
         </Card>

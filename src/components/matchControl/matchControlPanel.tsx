@@ -9,6 +9,7 @@ import PostMatchPanel from './subPanel/post_match';
 import type { MatchWithTeams } from '@/services/matches.api';
 import type { MatchConfigRow } from '@/services/match-config.api';
 import type { TeamOption } from '@/types/loader';
+import type { OverlayControlRow } from '@/services/control.api';
 
 interface MatchControlPanelProps {
     phase: MatchPhase;
@@ -17,6 +18,7 @@ interface MatchControlPanelProps {
     teams: TeamOption[];
     userId: string;
     matchTime: string;
+    overlayControl?: OverlayControlRow | null;
     onMatchUpdated?: () => void;
 }
 
@@ -27,6 +29,7 @@ export default function MatchControlPanel({
     teams,
     userId,
     matchTime,
+    overlayControl,
     onMatchUpdated,
 }: MatchControlPanelProps) {
     const halfDuration = matchConfig?.half_duration ?? 45;
@@ -65,6 +68,8 @@ export default function MatchControlPanel({
             <RestTimePanel
                 phase={phase}
                 match={match}
+                userId={userId}
+                overlayControl={overlayControl}
                 onMatchUpdated={onMatchUpdated}
             />
         );
