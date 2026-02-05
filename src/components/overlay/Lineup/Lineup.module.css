@@ -2,22 +2,27 @@
 
 /* ─── Cấu hình font (chỉnh tại đây) ─── */
 .overlayLineup {
+    --overlay-space: clamp(10px, 3vmin, 56px);
+    --overlay-fs-xs: clamp(9px, 2.2vmin, 12px);
+    --overlay-fs-sm: clamp(11px, 2.4vmin, 15px);
+    --overlay-fs-base: clamp(13px, 2.8vmin, 19px);
+    --overlay-fs-lg: clamp(15px, 3.4vmin, 24px);
     --lineup-font:
         'Inter', 'Fira Sans Condensed', system-ui, -apple-system,
         BlinkMacSystemFont, 'Segoe UI', sans-serif;
     /* Top + Bottom bar */
-    --lineup-top-size: 18px;
+    --lineup-top-size: 16px;
     --lineup-top-weight: 700;
-    --lineup-top-ls: 1.6px;
-    --lineup-team-name-size: 18px;
+    --lineup-top-ls: 1.4px;
+    --lineup-team-name-size: 16px;
     /* Middle - Left bar (dự bị, HLV) */
-    --lineup-middle-title-size: 18px;
+    --lineup-middle-title-size: 16px;
     --lineup-middle-title-weight: 700;
-    --lineup-middle-title-ls: 1.2px;
-    --lineup-middle-body-size: 16px;
+    --lineup-middle-title-ls: 1.1px;
+    --lineup-middle-body-size: 14px;
     /* Middle - Pitch (cầu thủ trên sân) */
-    --lineup-player-size: 16px;
-    --lineup-player-number-size: 18px;
+    --lineup-player-size: 14px;
+    --lineup-player-number-size: 16px;
     --lineup-player-weight: 400;
 
     position: fixed;
@@ -33,8 +38,10 @@
     position: fixed;
     left: 50%;
     top: 50%;
-    width: 1470px;
-    height: 830px;
+    width: min(1470px, calc(100vw - 2 * var(--overlay-space)));
+    height: min(830px, calc(100vh - 2 * var(--overlay-space)));
+    max-width: 100%;
+    max-height: 100%;
     transform: translate(-50%, calc(-50% + var(--lineup-offset-y)));
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
     overflow: hidden;
@@ -44,11 +51,11 @@
 }
 
 .overlayLineupTopbar {
-    height: 56px;
+    height: clamp(36px, 6vmin, 54px);
 }
 
 .overlayLineupBottombar {
-    height: 56px;
+    height: clamp(36px, 6vmin, 54px);
 }
 
 .overlayLineupTopbar,
@@ -78,10 +85,11 @@
 }
 
 .overlayLineupContent {
+    --lineup-bar-h: clamp(36px, 6vmin, 54px);
     position: absolute;
-    inset: 56px 0 56px;
+    inset: var(--lineup-bar-h) 0 var(--lineup-bar-h);
     display: grid;
-    grid-template-columns: minmax(280px, 0.35fr) minmax(0, 0.65fr);
+    grid-template-columns: minmax(min(200px, 35vw), 0.35fr) minmax(0, 0.65fr);
     background: var(--color-dark-green-85);
     column-gap: 0;
 }
@@ -90,7 +98,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 32px 24px 32px 56px;
+    padding: clamp(14px, 2.5vmin, 34px) clamp(12px, 1.8vmin, 24px) clamp(14px, 2.5vmin, 34px)
+        clamp(20px, 3.5vmin, 48px);
 }
 
 .overlayLineupLeftTitle {
@@ -98,28 +107,28 @@
         var(--lineup-font);
     letter-spacing: var(--lineup-middle-title-ls);
     text-transform: uppercase;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .overlayLineupLeftSection {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .overlayLineupSubs {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
     font-size: var(--lineup-middle-body-size);
 }
 
 .overlayLineupSubItem {
     display: flex;
-    gap: 8px;
+    gap: 7px;
     align-items: center;
 }
 
 .overlayLineupSubNumber {
-    min-width: 32px;
+    min-width: 28px;
     font-weight: var(--lineup-player-weight);
 }
 
@@ -133,11 +142,11 @@
 }
 
 .overlayLineupCoachBlock {
-    margin-top: 32px;
+    margin-top: 24px;
 }
 
 .overlayLineupCoachName {
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: var(--lineup-middle-body-size);
     text-transform: uppercase;
 }
@@ -177,7 +186,7 @@
 .overlayLineupPlayerRow {
     display: flex;
     justify-content: center;
-    gap: 72px;
+    gap: clamp(24px, 6vmin, 80px);
 }
 
 .overlayLineupPlayer {

@@ -1,18 +1,18 @@
 .clock {
     position: fixed;
-    bottom: 32px;
-    left: 64px;
+    bottom: var(--overlay-space);
+    left: var(--overlay-space);
     z-index: 1000;
-    padding: 5px 12px;
+    padding: 4px 10px;
     background: rgba(30, 30, 30, 0.8);
-    border-radius: 6px;
+    border-radius: clamp(4px, 1vmin, 8px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     opacity: 0;
     animation: overlayClockFadeIn 0.4s ease-out forwards;
 }
 
 .time {
-    font-size: 20px;
+    font-size: var(--overlay-fs-base);
     font-weight: 600;
     color: #ffffff;
     letter-spacing: 1px;

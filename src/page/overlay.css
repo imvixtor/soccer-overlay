@@ -15,6 +15,16 @@ body {
     pointer-events: none;
 }
 
+/* Biến responsive - scale theo viewport, cân bằng vừa đọc */
+.overlay-page {
+    --overlay-space: clamp(10px, 3vmin, 56px);
+    --overlay-space-sm: clamp(6px, 1.5vmin, 24px);
+    --overlay-fs-xs: clamp(9px, 2.2vmin, 12px);
+    --overlay-fs-sm: clamp(11px, 2.4vmin, 15px);
+    --overlay-fs-base: clamp(13px, 2.8vmin, 19px);
+    --overlay-fs-lg: clamp(15px, 3.4vmin, 24px);
+}
+
 /* CSS variables cho overlay components (ScoreBug, MatchStatus, GlobalClock) */
 .overlay-page {
     /* Colors with 100% Opacity */

@@ -45,18 +45,18 @@ function ScoreBug({
         additionalSeconds > 0 ? formatTime(additionalSeconds) : '';
 
     return (
-        <>
+        <div className={styles.scoreBugWrapper}>
             <div className={styles.leagueName}>
                 {league}
                 {agency && <span> - {agency}</span>}
                 {isPenaltyPhase && <span> - Penalty</span>}
             </div>
-            <div className={styles.scoreBug}>
+            <div className={styles.scoreBugMain}>
                 <div className={styles.teamSection}>
                     <div
                         className={styles.teamAccent}
                         style={{ backgroundColor: homeTeamAccentColor }}
-                    ></div>
+                    />
                     <div className={styles.teamName}>{homeTeam}</div>
                     <div className={styles.scoreBox}>{displayHomeScore}</div>
                 </div>
@@ -67,23 +67,22 @@ function ScoreBug({
                     <div
                         className={styles.teamAccent}
                         style={{ backgroundColor: awayTeamAccentColor }}
-                    ></div>
+                    />
                 </div>
-
-                {!hideClock && (
-                    <>
-                        <div className={styles.matchTimeSection}>
-                            {mainTimeStr}
-                        </div>
-                        {additionalTimeStr && (
-                            <div className={styles.additionalTimeSection}>
-                                +{additionalTimeStr}
-                            </div>
-                        )}
-                    </>
-                )}
             </div>
-        </>
+            {!hideClock && (
+                <div className={styles.scoreBugTimer}>
+                    <div className={styles.matchTimeSection}>
+                        {mainTimeStr}
+                    </div>
+                    {additionalTimeStr && (
+                        <div className={styles.additionalTimeSection}>
+                            +{additionalTimeStr}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }
 
