@@ -4,8 +4,10 @@ import type { OverlayLoaderData } from '@/services/overlay.loader';
 import { supabase } from '@/lib/supabase/client';
 import {
     getTimeOffset,
+    getRegulationEndSeconds,
     isClockStoppedPhase,
     isClockRunningPhase,
+    isHalfEndPhase,
     formatMatchTimeSeconds,
     EVENT_TYPE_LABELS,
 } from '@/lib/match-constants';
@@ -243,7 +245,7 @@ export default function OverlayPage() {
             playerById,
             match,
         );
-        if (phase === 'POST_MATCH') return all;
+        if (phase === 'POST_MATCH' || isHalfEndPhase(phase)) return all;
         return all.filter((e) => e.type === 'goal' || e.type === 'red');
     }, [matchEvents, playerById, match, phase]);
 
@@ -564,6 +566,15 @@ export default function OverlayPage() {
     const awayColor = match?.away_color ?? '#FF0000';
     const league = match?.name ?? 'Giao hữu';
 
+    const hideClock = phase === 'PENALTY_SHOOTOUT' || phase === 'POST_MATCH';
+    const regulationEnd = getRegulationEndSeconds(
+        phase,
+        halfDuration,
+        extraDuration,
+    );
+    const inStoppageTime =
+        !hideClock && scoreBugMatchTimeSeconds > regulationEnd;
+
     const periodLabel =
         phase === 'FIRST_HALF'
             ? 'HIỆP 1'
@@ -597,33 +608,43 @@ export default function OverlayPage() {
                 <GlobalClock />
             </OverlayFade>
 
-            <OverlayFade show={!!currentToast}>
-                {(currentToast ?? displayToast) && (
-                    <EventToast
-                        key={(currentToast ?? displayToast)!.id}
-                        type={(currentToast ?? displayToast)!.type}
-                        message={(currentToast ?? displayToast)!.message}
-                    />
-                )}
-            </OverlayFade>
-
-            <OverlayFade show={!!ctrl.scorebug_enable}>
-                <ScoreBug
-                    league={league}
-                    homeTeam={homeName}
-                    awayTeam={awayName}
-                    homeScore={match?.home_score ?? 0}
-                    awayScore={match?.away_score ?? 0}
-                    penaltyHome={match?.penalty_home ?? 0}
-                    penaltyAway={match?.penalty_away ?? 0}
-                    matchTime={scoreBugMatchTimeSeconds}
-                    phase={phase}
-                    halfDuration={halfDuration}
-                    extraDuration={extraDuration}
-                    homeTeamAccentColor={homeColor}
-                    awayTeamAccentColor={awayColor}
-                />
-            </OverlayFade>
+            <div
+                className="scorebug-event-stack"
+                data-hide-clock={hideClock}
+                data-stoppage={inStoppageTime}
+            >
+                <div className="scorebug-event-stack__scorebug">
+                    <OverlayFade show={!!ctrl.scorebug_enable}>
+                        <ScoreBug
+                            league={league}
+                            homeTeam={homeName}
+                            awayTeam={awayName}
+                            homeScore={match?.home_score ?? 0}
+                            awayScore={match?.away_score ?? 0}
+                            penaltyHome={match?.penalty_home ?? 0}
+                            penaltyAway={match?.penalty_away ?? 0}
+                            matchTime={scoreBugMatchTimeSeconds}
+                            phase={phase}
+                            halfDuration={halfDuration}
+                            extraDuration={extraDuration}
+                            homeTeamAccentColor={homeColor}
+                            awayTeamAccentColor={awayColor}
+                        />
+                    </OverlayFade>
+                </div>
+                <div className="scorebug-event-stack__toast">
+                    <OverlayFade show={!!currentToast}>
+                        {(currentToast ?? displayToast) && (
+                            <EventToast
+                                key={(currentToast ?? displayToast)!.id}
+                                type={(currentToast ?? displayToast)!.type}
+                                message={(currentToast ?? displayToast)!.message}
+                            />
+                        )}
+                    </OverlayFade>
+                </div>
+                <div className="scorebug-event-stack__spacer" aria-hidden />
+            </div>
 
             <OverlayFade show={!!ctrl.match_status_enable}>
                 <MatchStatus

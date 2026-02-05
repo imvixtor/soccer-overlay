@@ -49,4 +49,50 @@ body {
     opacity: 0;
 }
 
+/* Wrapper ScoreBug + EventToast: grid chung để EventToast = leagueName width */
+.scorebug-event-stack {
+    position: fixed;
+    top: var(--overlay-space);
+    left: var(--overlay-space);
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    row-gap: 4px;
+    column-gap: 2px;
+    max-width: min(600px, calc(100vw - 2 * var(--overlay-space)));
+}
+.scorebug-event-stack__scorebug {
+    grid-column: 1 / -1;
+}
+.scorebug-event-stack__toast {
+    grid-column: 1;
+}
+/* Spacer: 1 ô khi chưa bù giờ, 2 ô khi đang bù giờ */
+.scorebug-event-stack__spacer {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: clamp(62px, 9vmin, 101px);
+    width: clamp(62px, 9vmin, 101px);
+}
+.scorebug-event-stack[data-stoppage="true"] .scorebug-event-stack__spacer {
+    min-width: clamp(120px, calc(16vmin + 10px), 186px);
+    width: clamp(120px, calc(16vmin + 10px), 186px);
+}
+.scorebug-event-stack [class*="scoreBugWrapper"] {
+    position: static !important;
+}
+.scorebug-event-stack [class*="eventToast"] {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+}
+.scorebug-event-stack[data-hide-clock="true"] .scorebug-event-stack__spacer {
+    display: none;
+}
+.scorebug-event-stack[data-hide-clock="true"] .scorebug-event-stack__toast {
+    grid-column: 1 / -1;
+}
+
 /* (Styles cho Lineup đã chuyển sang Lineup.module.css) */
