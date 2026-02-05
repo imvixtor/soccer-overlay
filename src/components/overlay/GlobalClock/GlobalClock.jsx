@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import styles from './GlobalClock.module.css';
 
-function GlobalClock() {
+const GlobalClock = memo(function GlobalClock() {
     const [time, setTime] = useState(new Date());
 
     useEffect(() => {
@@ -23,6 +23,6 @@ function GlobalClock() {
             <div className={styles.time}>{formatTime(time)}</div>
         </div>
     );
-}
+});
 
 export default GlobalClock;

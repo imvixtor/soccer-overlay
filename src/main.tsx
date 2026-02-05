@@ -6,6 +6,7 @@ import './index.css';
 import App from './App.tsx';
 import AdminLayout from './page/layouts/AdminLayout.tsx';
 import LoadingPage from './page/loading.tsx';
+import OverlayFallback from './components/overlay/OverlayFallback';
 import { authMiddleware } from './middlewares/auth.middleware.tsx';
 import { userLoader } from './services/user.loader.tsx';
 import { overlayLoader } from './services/overlay.loader.tsx';
@@ -25,7 +26,7 @@ const router = createBrowserRouter([
             import('./page/overlay.tsx').then((module) => ({
                 Component: module.default,
             })),
-        hydrateFallbackElement: <LoadingPage />,
+        hydrateFallbackElement: <OverlayFallback />,
     },
     {
         path: '/auth/login',

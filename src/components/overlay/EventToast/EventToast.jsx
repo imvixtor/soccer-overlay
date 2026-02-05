@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import styles from './EventToast.module.css';
 
-function EventToast({ type = "TYPE", message = "Event Message" }) {
+const EventToast = memo(function EventToast({ type = "TYPE", message = "Event Message" }) {
     return (
         <div className={styles.eventToast}>
             <div className={styles.eventToastContent}>
@@ -10,6 +11,6 @@ function EventToast({ type = "TYPE", message = "Event Message" }) {
             <div className={styles.eventToastFooter}></div>
         </div>
     );
-}
+});
 
 export default EventToast;

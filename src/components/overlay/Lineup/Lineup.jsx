@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import styles from './Lineup.module.css';
 
 function chunkPlayers(players, maxPerRow) {
@@ -9,7 +9,7 @@ function chunkPlayers(players, maxPerRow) {
     return rows;
 }
 
-function Lineup({ match, players, teams, isAway }) {
+const Lineup = memo(function Lineup({ match, players, teams, isAway }) {
     if (!match) return null;
 
     const teamId = isAway ? match.away_team : match.home_team;
@@ -161,6 +161,6 @@ function Lineup({ match, players, teams, isAway }) {
             </div>
         </div>
     );
-}
+});
 
 export default Lineup;

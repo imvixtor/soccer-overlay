@@ -1,15 +1,12 @@
-import { useEffect, useState, useMemo, useRef, type ReactNode } from 'react';
+import { useEffect, useState, useMemo, useRef, memo, type ReactNode } from 'react';
 import { useLoaderData } from 'react-router';
 import type { OverlayLoaderData } from '@/services/overlay.loader';
 import { supabase } from '@/lib/supabase/client';
-import {
-    getTimeOffset,
-    isClockStoppedPhase,
-    isClockRunningPhase,
-    formatMatchTimeSeconds,
-    EVENT_TYPE_LABELS,
-} from '@/lib/match-constants';
+import { isClockRunningPhase, EVENT_TYPE_LABELS } from '@/lib/match-constants';
 import type { MatchPhase } from '@/lib/match-constants';
+import { MatchTimeProvider } from '@/store/MatchTimeContext';
+
+const useMatchTime = MatchTimeProvider.useMatchTime;
 // @ts-expect-error - overlay components are JSX without types
 import ScoreBug from '@/components/overlay/ScoreBug/ScoreBug';
 // @ts-expect-error - overlay components are JSX without types
@@ -76,6 +73,100 @@ function OverlayFade({
 }
 
 const DEFAULT_PHASE: MatchPhase = 'INITIATION';
+
+const ScoreBugWithTime = memo(function ScoreBugWithTime({
+    league,
+    homeName,
+    awayName,
+    homeScore,
+    awayScore,
+    penaltyHome,
+    penaltyAway,
+    phase,
+    halfDuration,
+    extraDuration,
+    homeColor,
+    awayColor,
+}: {
+    league: string;
+    homeName: string;
+    awayName: string;
+    homeScore: number;
+    awayScore: number;
+    penaltyHome: number;
+    penaltyAway: number;
+    phase: MatchPhase;
+    halfDuration: number;
+    extraDuration: number;
+    homeColor: string;
+    awayColor: string;
+}) {
+    const { scoreBugMatchTimeSeconds } = useMatchTime();
+    return (
+        <ScoreBug
+            league={league}
+            homeTeam={homeName}
+            awayTeam={awayName}
+            homeScore={homeScore}
+            awayScore={awayScore}
+            penaltyHome={penaltyHome}
+            penaltyAway={penaltyAway}
+            matchTime={scoreBugMatchTimeSeconds}
+            phase={phase}
+            halfDuration={halfDuration}
+            extraDuration={extraDuration}
+            homeTeamAccentColor={homeColor}
+            awayTeamAccentColor={awayColor}
+        />
+    );
+});
+
+const MatchStatusWithTime = memo(function MatchStatusWithTime({
+    showMatchTime,
+    periodLabel,
+    league,
+    homeName,
+    awayName,
+    homeScore,
+    awayScore,
+    penaltyHome,
+    penaltyAway,
+    matchStatusEvents,
+    homeColor,
+    awayColor,
+}: {
+    showMatchTime: boolean;
+    periodLabel: string;
+    league: string;
+    homeName: string;
+    awayName: string;
+    homeScore: number;
+    awayScore: number;
+    penaltyHome: number;
+    penaltyAway: number;
+    matchStatusEvents: MatchStatusEvent[];
+    homeColor: string;
+    awayColor: string;
+}) {
+    const { displayMatchTime } = useMatchTime();
+    return (
+        <MatchStatus
+            matchTime={displayMatchTime}
+            showMatchTime={showMatchTime}
+            period={periodLabel}
+            league={league}
+            homeTeam={homeName}
+            awayTeam={awayName}
+            homeScore={homeScore}
+            awayScore={awayScore}
+            penaltyHome={penaltyHome}
+            penaltyAway={penaltyAway}
+            events={matchStatusEvents}
+            homeTeamAccentColor={homeColor}
+            awayTeamAccentColor={awayColor}
+        />
+    );
+});
 
 const EVENT_TYPE_MAP: Record<string, string> = {
     GOAL: 'goal',
@@ -167,8 +258,6 @@ export default function OverlayPage() {
         initial.overlayControl,
     );
     const [matchConfig, setMatchConfig] = useState(initial.matchConfig);
-    const [matchTime, setMatchTime] = useState('00:00');
-    const [matchTimeSeconds, setMatchTimeSeconds] = useState(0);
     const [matchEvents, setMatchEvents] = useState<MatchEventRow[]>(
         initial.matchEvents ?? [],
     );
@@ -200,9 +289,10 @@ export default function OverlayPage() {
         });
     }, [match?.id]);
 
-    // Realtime: players
+    // Realtime: players - chỉ subscribe khi lineup được bật (tiết kiệm tài nguyên mobile)
+    const shouldSubscribePlayers = overlayControl?.lineup_enable ?? false;
     useEffect(() => {
-        if (!initial.userId) return;
+        if (!initial.userId || !shouldSubscribePlayers) return;
 
         const channel = supabase
             .channel(`overlay-players:${initial.userId}`)
@@ -231,7 +321,7 @@ export default function OverlayPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [initial.userId]);
+    }, [initial.userId, shouldSubscribePlayers]);
 
     // Realtime: match
     useEffect(() => {
@@ -438,61 +528,6 @@ export default function OverlayPage() {
         };
     }, [initial.userId]);
 
-    // Giá trị hiển thị khi đồng hồ dừng – tính từ match_time trong DB
-    const stoppedPhaseTime =
-        isClockStoppedPhase(phase) && match
-            ? formatMatchTimeSeconds(match.match_time ?? 0)
-            : null;
-
-    // Giá trị khi chưa có start_at (chưa bắt đầu đếm)
-    const noStartTime =
-        !isClockStoppedPhase(phase) && !match?.start_at ? '00:00' : null;
-
-    // Tính match time khi đồng hồ chạy (có start_at)
-    useEffect(() => {
-        if (isClockStoppedPhase(phase) || !match?.start_at) return;
-
-        const timeOffset = getTimeOffset(phase, halfDuration, extraDuration);
-        const start = new Date(match.start_at).getTime();
-
-        if (!match.stop_at) {
-            const updateTime = () => {
-                const now = Date.now();
-                const elapsed = Math.floor((now - start) / 1000);
-                const totalSeconds = Math.max(0, elapsed + timeOffset);
-                setMatchTimeSeconds(totalSeconds);
-                const minutes = Math.floor(totalSeconds / 60);
-                const secs = totalSeconds % 60;
-                setMatchTime(
-                    `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
-                );
-            };
-            updateTime();
-            const interval = setInterval(updateTime, 1000);
-            return () => clearInterval(interval);
-        }
-        const stop = new Date(match.stop_at).getTime();
-        const elapsed = Math.floor((stop - start) / 1000);
-        const totalSeconds = Math.max(0, elapsed + timeOffset);
-        const minutes = Math.floor(totalSeconds / 60);
-        const secs = totalSeconds % 60;
-        const formatted = `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        queueMicrotask(() => {
-            setMatchTimeSeconds(totalSeconds);
-            setMatchTime(formatted);
-        });
-    }, [match?.start_at, match?.stop_at, phase, halfDuration, extraDuration]);
-
-    const displayMatchTime = stoppedPhaseTime ?? noStartTime ?? matchTime;
-
-    /** Số giây tổng cho ScoreBug (logic thời gian bù nằm trong ScoreBug) */
-    const scoreBugMatchTimeSeconds =
-        isClockStoppedPhase(phase) && match
-            ? (match.match_time ?? 0)
-            : !match?.start_at && !isClockStoppedPhase(phase)
-              ? 0
-              : matchTimeSeconds;
-
     const ctrl = overlayControl ?? {
         clock_enable: true,
         scorebug_enable: true,
@@ -535,65 +570,72 @@ export default function OverlayPage() {
                                   : phase;
 
     return (
-        <div className="overlay-page">
-            <OverlayFade show={!!ctrl.clock_enable}>
-                <GlobalClock />
-            </OverlayFade>
+        <MatchTimeProvider
+            phase={phase}
+            halfDuration={halfDuration}
+            extraDuration={extraDuration}
+            matchTimeFromDb={match?.match_time ?? null}
+            matchStartAt={match?.start_at ?? null}
+            matchStopAt={match?.stop_at ?? null}
+        >
+            <div className="overlay-page">
+                <OverlayFade show={!!ctrl.clock_enable}>
+                    <GlobalClock />
+                </OverlayFade>
 
-            <OverlayFade show={!!currentToast}>
-                {(currentToast ?? displayToast) && (
-                    <EventToast
-                        key={(currentToast ?? displayToast)!.id}
-                        type={(currentToast ?? displayToast)!.type}
-                        message={(currentToast ?? displayToast)!.message}
+                <OverlayFade show={!!currentToast}>
+                    {(currentToast ?? displayToast) && (
+                        <EventToast
+                            key={(currentToast ?? displayToast)!.id}
+                            type={(currentToast ?? displayToast)!.type}
+                            message={(currentToast ?? displayToast)!.message}
+                        />
+                    )}
+                </OverlayFade>
+
+                <OverlayFade show={!!ctrl.scorebug_enable}>
+                    <ScoreBugWithTime
+                        league={league}
+                        homeName={homeName}
+                        awayName={awayName}
+                        homeScore={match?.home_score ?? 0}
+                        awayScore={match?.away_score ?? 0}
+                        penaltyHome={match?.penalty_home ?? 0}
+                        penaltyAway={match?.penalty_away ?? 0}
+                        phase={phase}
+                        halfDuration={halfDuration}
+                        extraDuration={extraDuration}
+                        homeColor={homeColor}
+                        awayColor={awayColor}
                     />
-                )}
-            </OverlayFade>
+                </OverlayFade>
 
-            <OverlayFade show={!!ctrl.scorebug_enable}>
-                <ScoreBug
-                    league={league}
-                    homeTeam={homeName}
-                    awayTeam={awayName}
-                    homeScore={match?.home_score ?? 0}
-                    awayScore={match?.away_score ?? 0}
-                    penaltyHome={match?.penalty_home ?? 0}
-                    penaltyAway={match?.penalty_away ?? 0}
-                    matchTime={scoreBugMatchTimeSeconds}
-                    phase={phase}
-                    halfDuration={halfDuration}
-                    extraDuration={extraDuration}
-                    homeTeamAccentColor={homeColor}
-                    awayTeamAccentColor={awayColor}
-                />
-            </OverlayFade>
+                <OverlayFade show={!!ctrl.match_status_enable}>
+                    <MatchStatusWithTime
+                        showMatchTime={phase !== 'POST_MATCH'}
+                        periodLabel={periodLabel}
+                        league={league}
+                        homeName={homeName}
+                        awayName={awayName}
+                        homeScore={match?.home_score ?? 0}
+                        awayScore={match?.away_score ?? 0}
+                        penaltyHome={match?.penalty_home ?? 0}
+                        penaltyAway={match?.penalty_away ?? 0}
+                        matchStatusEvents={matchStatusEvents}
+                        homeColor={homeColor}
+                        awayColor={awayColor}
+                    />
+                </OverlayFade>
 
-            <OverlayFade show={!!ctrl.match_status_enable}>
-                <MatchStatus
-                    matchTime={displayMatchTime}
-                    showMatchTime={phase !== 'POST_MATCH'}
-                    period={periodLabel}
-                    league={league}
-                    homeTeam={homeName}
-                    awayTeam={awayName}
-                    homeScore={match?.home_score ?? 0}
-                    awayScore={match?.away_score ?? 0}
-                    penaltyHome={match?.penalty_home ?? 0}
-                    penaltyAway={match?.penalty_away ?? 0}
-                    events={matchStatusEvents}
-                    homeTeamAccentColor={homeColor}
-                    awayTeamAccentColor={awayColor}
-                />
-            </OverlayFade>
-
-            <OverlayFade show={!!ctrl.lineup_enable}>
-                <Lineup
-                    match={match}
-                    players={players}
-                    teams={initial.teams}
-                    isAway={ctrl.away_lineup}
-                />
-            </OverlayFade>
-        </div>
+                <OverlayFade show={!!ctrl.lineup_enable}>
+                    <Lineup
+                        match={match}
+                        players={players}
+                        teams={initial.teams}
+                        isAway={ctrl.away_lineup}
+                    />
+                </OverlayFade>
+            </div>
+        </MatchTimeProvider>
     );
 }

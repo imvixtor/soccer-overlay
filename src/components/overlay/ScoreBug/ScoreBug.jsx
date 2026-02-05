@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import styles from './ScoreBug.module.css';
 import { getRegulationEndSeconds } from '@/lib/match-constants';
 
@@ -9,7 +10,7 @@ function formatTime(seconds) {
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 }
 
-function ScoreBug({
+const ScoreBug = memo(function ScoreBug({
     league = 'Giao hữu',
     agency = '',
     homeTeam = 'TEAM 1',
@@ -85,6 +86,6 @@ function ScoreBug({
             </div>
         </>
     );
-}
+});
 
 export default ScoreBug;

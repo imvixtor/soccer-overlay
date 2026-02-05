@@ -1,6 +1,7 @@
+import { memo } from 'react';
 import styles from './MatchStatus.module.css';
 
-function MatchStatus({
+const MatchStatus = memo(function MatchStatus({
     matchTime = '61:23',
     showMatchTime = true,
     period = 'HIỆP 2',
@@ -89,6 +90,6 @@ function MatchStatus({
             </div>
         </div>
     );
-}
+});
 
 export default MatchStatus;
