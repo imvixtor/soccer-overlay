@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Users } from 'lucide-react';
+import { Pencil, Trash2, Users, CheckSquare2, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type EntityListCardProps = {
@@ -10,6 +10,9 @@ type EntityListCardProps = {
     onDelete?: () => void;
     onPlayers?: () => void;
     showActions: boolean;
+    selectable?: boolean;
+    selected?: boolean;
+    onToggleSelect?: () => void;
 };
 
 export function EntityListCard({
@@ -20,6 +23,9 @@ export function EntityListCard({
     onDelete,
     onPlayers,
     showActions,
+    selectable = false,
+    selected = false,
+    onToggleSelect,
 }: EntityListCardProps) {
     return (
         <div
@@ -50,6 +56,22 @@ export function EntityListCard({
             </div>
             {showActions && (
                 <div className="flex shrink-0 items-center gap-1">
+                    {selectable && onToggleSelect && (
+                        <Button
+                            type="button"
+                            variant={selected ? 'default' : 'outline'}
+                            size="icon-sm"
+                            onClick={onToggleSelect}
+                            aria-pressed={selected}
+                            aria-label={selected ? 'Bỏ chọn' : 'Chọn'}
+                        >
+                            {selected ? (
+                                <CheckSquare2 className="size-4" />
+                            ) : (
+                                <Square className="size-4" />
+                            )}
+                        </Button>
+                    )}
                     {onPlayers && (
                         <Button
                             variant="ghost"

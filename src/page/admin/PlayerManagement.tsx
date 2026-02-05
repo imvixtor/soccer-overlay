@@ -1,5 +1,5 @@
 import { useLoaderData, useRevalidator, useSearchParams } from 'react-router';
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import type { TablesInsert, TablesUpdate } from '@/types/supabase';
 import type { PlayersLoaderData, PlayerWithTeam } from '@/types/loader';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,16 @@ export default function PlayerManagementPage() {
     const [importError, setImportError] = useState<string | null>(null);
     const [importSuccess, setImportSuccess] = useState<number | null>(null);
 
+    const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
+    const [transferTeamId, setTransferTeamId] = useState<string>('');
+    const [isTransferring, setIsTransferring] = useState(false);
+    const [transferError, setTransferError] = useState<string | null>(null);
+    const [isTransferOpen, setIsTransferOpen] = useState(false);
+    const transferDialogRef = useRef<HTMLDialogElement>(null);
+
     const currentPage = Math.min(page, totalPages);
 
     usePaginationRedirect(page, totalPages);
@@ -92,6 +102,31 @@ export default function PlayerManagementPage() {
         setDeleteError(null);
     };
 
+    const togglePlayerSelected = (id: number) => {
+        setSelectedPlayerIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+        );
+    };
+
+    const isPlayerSelected = (id: number) => selectedPlayerIds.includes(id);
+
+    const clearSelection = () => setSelectedPlayerIds([]);
+
+    const openBulkDeleteDialog = () => {
+        setIsBulkDeleteOpen(true);
+        setBulkDeleteError(null);
+    };
+
+    const closeBulkDeleteDialog = () => {
+        setIsBulkDeleteOpen(false);
+        setBulkDeleteError(null);
+    };
+
+    useEffect(() => {
+        if (isTransferOpen) transferDialogRef.current?.showModal();
+        else transferDialogRef.current?.close();
+    }, [isTransferOpen]);
+
     const confirmDelete = async () => {
         if (!user || !deletingPlayer) return;
         setIsDeleting(true);
@@ -104,6 +139,48 @@ export default function PlayerManagementPage() {
             setDeleteError(getErrorMessage(e));
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const confirmBulkDelete = async () => {
+        if (!user || selectedPlayerIds.length === 0) return;
+        setIsBulkDeleting(true);
+        setBulkDeleteError(null);
+        try {
+            await playersApi.deletePlayers(selectedPlayerIds, user.id);
+            clearSelection();
+            closeBulkDeleteDialog();
+            revalidate();
+        } catch (e) {
+            setBulkDeleteError(getErrorMessage(e));
+        } finally {
+            setIsBulkDeleting(false);
+        }
+    };
+
+    const handleTransfer = async () => {
+        if (!user || selectedPlayerIds.length === 0) return;
+        const targetId = parseInt(transferTeamId, 10);
+        if (!Number.isFinite(targetId)) {
+            setTransferError('Vui lòng chọn đội đích.');
+            return;
+        }
+        setIsTransferring(true);
+        setTransferError(null);
+        try {
+            await playersApi.transferPlayersToTeam({
+                userId: user.id,
+                playerIds: selectedPlayerIds,
+                teamId: targetId,
+            });
+            clearSelection();
+            setTransferTeamId('');
+            setIsTransferOpen(false);
+            revalidate();
+        } catch (e) {
+            setTransferError(getErrorMessage(e));
+        } finally {
+            setIsTransferring(false);
         }
     };
 
@@ -239,10 +316,21 @@ export default function PlayerManagementPage() {
                                         p.teams?.name ||
                                         null
                                     }
-                                    extra={`${p.number}${p.nickname ? ` : ${capitalizeName(p.nickname)}` : ''}`}
+                                    extra={`${p.number}${
+                                        p.nickname
+                                            ? ` : ${capitalizeName(
+                                                  p.nickname,
+                                              )}`
+                                            : ''
+                                    }`}
                                     onEdit={() => openEdit(p)}
                                     onDelete={() => openDeleteConfirm(p)}
                                     showActions={!!user}
+                                    selectable={!!user}
+                                    selected={isPlayerSelected(p.id)}
+                                    onToggleSelect={() =>
+                                        togglePlayerSelected(p.id)
+                                    }
                                 />
                             </li>
                         ))}
@@ -259,7 +347,24 @@ export default function PlayerManagementPage() {
                 </>
             )}
 
-            {user && <AddFab onClick={openAdd} aria-label="Thêm cầu thủ" />}
+            {user &&
+                (selectedPlayerIds.length === 0 ? (
+                    <AddFab onClick={openAdd} aria-label="Thêm cầu thủ" />
+                ) : (
+                    <>
+                        <AddFab
+                            onClick={openBulkDeleteDialog}
+                            aria-label="Xóa cầu thủ đã chọn"
+                            variant="delete"
+                        />
+                        <AddFab
+                            onClick={() => setIsTransferOpen(true)}
+                            aria-label="Chuyển đội cho cầu thủ đã chọn"
+                            variant="transfer"
+                            className="bottom-40"
+                        />
+                    </>
+                ))}
 
             <dialog
                 ref={dialogRef}
@@ -393,6 +498,85 @@ export default function PlayerManagementPage() {
                 isDeleting={isDeleting}
                 error={deleteError}
             />
+
+            <DeleteConfirmDialog
+                open={isBulkDeleteOpen}
+                onClose={closeBulkDeleteDialog}
+                title="Xóa các cầu thủ đã chọn?"
+                itemName={
+                    selectedPlayerIds.length
+                        ? `${selectedPlayerIds.length} cầu thủ đã chọn`
+                        : 'các cầu thủ đã chọn'
+                }
+                onConfirm={confirmBulkDelete}
+                isDeleting={isBulkDeleting}
+                error={bulkDeleteError}
+            />
+
+            <dialog
+                ref={transferDialogRef}
+                className={cn(
+                    'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+                    'w-full max-w-[calc(100vw-2rem)] sm:max-w-sm',
+                    'rounded-2xl border bg-card p-0 shadow-2xl',
+                    'backdrop:bg-black/60 backdrop:backdrop-blur-sm',
+                )}
+                onCancel={() => setIsTransferOpen(false)}
+            >
+                <div className="px-4 pt-4 pb-3 sm:px-5">
+                    <h2 className="text-base font-semibold">
+                        Chuyển đội cho cầu thủ đã chọn
+                    </h2>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Đã chọn {selectedPlayerIds.length} cầu thủ. Chọn đội đích
+                        và xác nhận để chuyển.
+                    </p>
+                </div>
+                <div className="px-4 pb-4 pt-0 sm:px-5 space-y-3">
+                    <div className="grid gap-2">
+                        <Label htmlFor="transfer-team">Đội đích</Label>
+                        <select
+                            id="transfer-team"
+                            value={transferTeamId}
+                            onChange={(e) => setTransferTeamId(e.target.value)}
+                            className={cn(
+                                'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                            )}
+                        >
+                            <option value="">Chọn đội</option>
+                            {teams.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                    {t.name} ({t.short_name})
+                                </option>
+                            ))}
+                        </select>
+                        {transferError && (
+                            <p className="text-xs text-destructive">
+                                {transferError}
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsTransferOpen(false)}
+                        >
+                            Hủy
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={handleTransfer}
+                            disabled={isTransferring}
+                            className="gap-2"
+                        >
+                            {isTransferring && <Spinner className="size-4" />}
+                            Xác nhận
+                        </Button>
+                    </div>
+                </div>
+            </dialog>
         </div>
     );
 }

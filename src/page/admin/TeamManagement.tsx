@@ -48,6 +48,11 @@ export default function TeamManagementPage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
+    const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
+
     const [isImporting, setIsImporting] = useState(false);
     const [importError, setImportError] = useState<string | null>(null);
     const [importSuccess, setImportSuccess] = useState<number | null>(null);
@@ -95,6 +100,26 @@ export default function TeamManagementPage() {
         setDeleteError(null);
     };
 
+    const toggleTeamSelected = (id: number) => {
+        setSelectedTeamIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+        );
+    };
+
+    const isTeamSelected = (id: number) => selectedTeamIds.includes(id);
+
+    const clearSelection = () => setSelectedTeamIds([]);
+
+    const openBulkDeleteDialog = () => {
+        setIsBulkDeleteOpen(true);
+        setBulkDeleteError(null);
+    };
+
+    const closeBulkDeleteDialog = () => {
+        setIsBulkDeleteOpen(false);
+        setBulkDeleteError(null);
+    };
+
     const confirmDelete = async () => {
         if (!user || !deletingTeam) return;
         setIsDeleting(true);
@@ -107,6 +132,25 @@ export default function TeamManagementPage() {
             setDeleteError(getErrorMessage(e));
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const confirmBulkDelete = async () => {
+        if (!user || selectedTeamIds.length === 0) return;
+        setIsBulkDeleting(true);
+        setBulkDeleteError(null);
+        try {
+            const promises = selectedTeamIds.map((id) =>
+                teamsApi.deleteTeam(id, user.id),
+            );
+            await Promise.all(promises);
+            clearSelection();
+            closeBulkDeleteDialog();
+            revalidate();
+        } catch (e) {
+            setBulkDeleteError(getErrorMessage(e));
+        } finally {
+            setIsBulkDeleting(false);
         }
     };
 
@@ -196,6 +240,11 @@ export default function TeamManagementPage() {
                                     onEdit={() => openEdit(t)}
                                     onDelete={() => openDeleteConfirm(t)}
                                     showActions={!!user}
+                                    selectable={!!user}
+                                    selected={isTeamSelected(t.id)}
+                                    onToggleSelect={() =>
+                                        toggleTeamSelected(t.id)
+                                    }
                                 />
                             </li>
                         ))}
@@ -216,7 +265,16 @@ export default function TeamManagementPage() {
                 </>
             )}
 
-            {user && <AddFab onClick={openAdd} aria-label="Thêm đội" />}
+            {user &&
+                (selectedTeamIds.length === 0 ? (
+                    <AddFab onClick={openAdd} aria-label="Thêm đội" />
+                ) : (
+                    <AddFab
+                        onClick={openBulkDeleteDialog}
+                        aria-label="Xóa đội đã chọn"
+                        variant="delete"
+                    />
+                ))}
 
             <dialog
                 ref={dialogRef}
@@ -321,6 +379,20 @@ export default function TeamManagementPage() {
                 onConfirm={confirmDelete}
                 isDeleting={isDeleting}
                 error={deleteError}
+            />
+
+            <DeleteConfirmDialog
+                open={isBulkDeleteOpen}
+                onClose={closeBulkDeleteDialog}
+                title="Xóa các đội đã chọn?"
+                itemName={
+                    selectedTeamIds.length
+                        ? `${selectedTeamIds.length} đội đã chọn`
+                        : 'các đội đã chọn'
+                }
+                onConfirm={confirmBulkDelete}
+                isDeleting={isBulkDeleting}
+                error={bulkDeleteError}
             />
         </div>
     );

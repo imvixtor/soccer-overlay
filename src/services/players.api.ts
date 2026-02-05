@@ -10,6 +10,19 @@ export async function deletePlayer(id: number, userId: string): Promise<void> {
     if (error) throw error;
 }
 
+export async function deletePlayers(
+    ids: number[],
+    userId: string,
+): Promise<void> {
+    if (!ids.length) return;
+    const { error } = await supabase
+        .from('players')
+        .delete()
+        .eq('user_id', userId)
+        .in('id', ids);
+    if (error) throw error;
+}
+
 export async function createPlayer(
     data: TablesInsert<'players'>,
 ): Promise<void> {
@@ -34,6 +47,21 @@ export async function importPlayers(
     data: TablesInsert<'players'>[],
 ): Promise<void> {
     const { error } = await supabase.from('players').insert(data);
+    if (error) throw error;
+}
+
+export async function transferPlayersToTeam(params: {
+    userId: string;
+    playerIds: number[];
+    teamId: number;
+}): Promise<void> {
+    const { userId, playerIds, teamId } = params;
+    if (!playerIds.length) return;
+    const { error } = await supabase
+        .from('players')
+        .update({ team_id: teamId })
+        .eq('user_id', userId)
+        .in('id', playerIds);
     if (error) throw error;
 }
 
