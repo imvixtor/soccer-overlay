@@ -75,6 +75,58 @@ function OverlayFade({
     );
 }
 
+/** Lineup với transition khi chuyển home ↔ away: fade out → fade in thay vì nhảy data. */
+function LineupWithTransition({
+    lineupEnable,
+    awayLineup,
+    match,
+    players,
+    teams,
+}: {
+    lineupEnable: boolean;
+    awayLineup: boolean;
+    match: OverlayLoaderData['match'];
+    players: OverlayLoaderData['players'];
+    teams: OverlayLoaderData['teams'];
+}) {
+    const [displayedAway, setDisplayedAway] = useState(awayLineup);
+    const [showContent, setShowContent] = useState(true);
+    const prevAwayRef = useRef(awayLineup);
+
+    useEffect(() => {
+        if (!lineupEnable) {
+            prevAwayRef.current = awayLineup;
+            return;
+        }
+        if (awayLineup !== prevAwayRef.current) {
+            prevAwayRef.current = awayLineup;
+            const raf = requestAnimationFrame(() => setShowContent(false));
+            const t = window.setTimeout(() => {
+                setDisplayedAway(awayLineup);
+                requestAnimationFrame(() => setShowContent(true));
+            }, FADE_DURATION_MS);
+            return () => {
+                cancelAnimationFrame(raf);
+                window.clearTimeout(t);
+            };
+        }
+        queueMicrotask(() => setDisplayedAway(awayLineup));
+    }, [lineupEnable, awayLineup]);
+
+    return (
+        <OverlayFade show={!!lineupEnable}>
+            <OverlayFade show={showContent}>
+                <Lineup
+                    match={match}
+                    players={players}
+                    teams={teams}
+                    isAway={displayedAway}
+                />
+            </OverlayFade>
+        </OverlayFade>
+    );
+}
+
 const DEFAULT_PHASE: MatchPhase = 'INITIATION';
 
 const EVENT_TYPE_MAP: Record<string, string> = {
@@ -586,14 +638,13 @@ export default function OverlayPage() {
                 />
             </OverlayFade>
 
-            <OverlayFade show={!!ctrl.lineup_enable}>
-                <Lineup
-                    match={match}
-                    players={players}
-                    teams={initial.teams}
-                    isAway={ctrl.away_lineup}
-                />
-            </OverlayFade>
+            <LineupWithTransition
+                lineupEnable={!!ctrl.lineup_enable}
+                awayLineup={!!ctrl.away_lineup}
+                match={match}
+                players={players}
+                teams={initial.teams}
+            />
         </div>
     );
 }
