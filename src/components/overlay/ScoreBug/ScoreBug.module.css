@@ -87,10 +87,14 @@
     justify-content: center;
     min-width: clamp(72px, 11vw, 160px);
     width: clamp(72px, 11vw, 160px);
+    max-width: clamp(72px, 11vw, 160px);
     height: 100%;
     background: var(--color-dark-navy);
     text-transform: uppercase;
     letter-spacing: var(--scorebug-title-ls);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .scoreBox {
