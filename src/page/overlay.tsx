@@ -726,3 +726,13 @@ export default function OverlayPage() {
         </div>
     );
 }
+
+// Khi tab overlay được mở ở nhiều cửa sổ và bị ẩn lâu,
+// khi quay lại sẽ tự reload để đồng bộ thời gian/phase với server.
+if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            window.location.reload();
+        }
+    });
+}

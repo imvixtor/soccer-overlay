@@ -84,6 +84,20 @@ export default function MatchControlPage() {
         setMatch(initialMatch);
     }, [initialMatch]);
 
+    // Khi tab quay lại trạng thái visible sau một thời gian ẩn, revalidate lại dữ liệu
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                revalidate();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibility);
+        };
+    }, [revalidate]);
+
     // Thiết lập realtime subscription
     useEffect(() => {
         if (!match?.id) return;
