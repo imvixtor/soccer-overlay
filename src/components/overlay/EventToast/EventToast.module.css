@@ -6,17 +6,15 @@
     font-weight: 500;
     color: #ffffff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    animation: toastSlideIn 0.35s ease-out;
+    animation: toastFadeIn 0.35s ease-out;
 }
 
-@keyframes toastSlideIn {
+@keyframes toastFadeIn {
     from {
         opacity: 0;
-        transform: translateY(-24px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 

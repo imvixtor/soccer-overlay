@@ -39,7 +39,7 @@
 .scoreBugMain {
     grid-column: 1;
     grid-row: 2;
-    height: clamp(30px, 5.5vmin, 44px);
+    height: clamp(28px, 5.2vmin, 42px);
     display: flex;
     align-items: center;
     gap: 2px;
@@ -85,10 +85,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: clamp(72px, 11vw, 160px);
-    width: clamp(72px, 11vw, 160px);
-    max-width: clamp(72px, 11vw, 160px);
+    min-width: clamp(82px, 12.5vw, 176px);
+    width: clamp(82px, 12.5vw, 176px);
+    max-width: clamp(82px, 12.5vw, 176px);
     height: 100%;
+    padding: 2px 0;
+    box-sizing: border-box;
     background: var(--color-dark-navy);
     text-transform: uppercase;
     letter-spacing: var(--scorebug-title-ls);
