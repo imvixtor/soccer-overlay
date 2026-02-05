@@ -108,11 +108,6 @@ function Lineup({ match, players, teams, isAway }) {
 
                     <div className={styles.overlayLineupRight}>
                         <div className={styles.overlayLineupPitch}>
-                            <div className={styles.overlayLineupPitchCenter} />
-                            <div
-                                className={styles.overlayLineupPitchSemicircle}
-                            />
-                            <div className={styles.overlayLineupPitchBox} />
                             <div className={styles.overlayLineupPitchPlayers}>
                                 {starterRows.map((row, rowIndex) => (
                                     <div

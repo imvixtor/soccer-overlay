@@ -70,14 +70,14 @@
     display: grid;
     grid-template-columns: minmax(280px, 0.35fr) minmax(0, 0.65fr);
     background: var(--color-dark-green-85);
-    padding: 32px 56px;
-    column-gap: 56px;
+    column-gap: 0;
 }
 
 .overlayLineupLeft {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    padding: 32px 24px 32px 56px;
 }
 
 .overlayLineupLeftTitle {
@@ -136,24 +136,21 @@
 }
 
 .overlayLineupPitch {
+    --lineup-pitch-bg-opacity: 0.2;
     position: relative;
     flex: 1;
+}
+
+.overlayLineupPitch::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background-image: url('/linemap.png');
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-}
-
-.overlayLineupPitchCenter {
-    /* dùng ảnh linemap, không cần vẽ bằng CSS nữa */
-}
-
-.overlayLineupPitchSemicircle {
-    /* dùng ảnh linemap, không cần vẽ bằng CSS nữa */
-}
-
-.overlayLineupPitchBox {
-    /* dùng ảnh linemap, không cần vẽ bằng CSS nữa */
+    opacity: var(--lineup-pitch-bg-opacity);
+    pointer-events: none;
 }
 
 .overlayLineupPitchPlayers {
