@@ -9,6 +9,15 @@ function formatTime(seconds) {
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
 }
 
+/** Bù giờ: 1 chữ số phút nếu < 10 (vd +0:25, +2:13), 2 chữ số nếu >= 10 (vd +11:35) */
+function formatAdditionalTime(seconds) {
+    const s = Math.max(0, Math.floor(seconds));
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    const mStr = m < 10 ? String(m) : String(m).padStart(2, '0');
+    return `${mStr}:${String(sec).padStart(2, '0')}`;
+}
+
 function ScoreBug({
     league = 'Giao hữu',
     agency = '',
@@ -42,7 +51,7 @@ function ScoreBug({
     const mainTimeStr = formatTime(mainTime);
     const additionalSeconds = inStoppageTime ? totalSeconds - regulationEnd : 0;
     const additionalTimeStr =
-        additionalSeconds > 0 ? formatTime(additionalSeconds) : '';
+        additionalSeconds > 0 ? formatAdditionalTime(additionalSeconds) : '';
 
     return (
         <div className={styles.scoreBugWrapper}>

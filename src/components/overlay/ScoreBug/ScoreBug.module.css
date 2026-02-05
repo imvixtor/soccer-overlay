@@ -108,9 +108,12 @@
     align-items: center;
     justify-content: center;
     height: 100%;
+    min-width: 0;
     background: var(--color-teal);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    width: clamp(52px, 7vmin, 80px);
+    width: clamp(60px, 8.5vmin, 95px);
+    padding: 0 6px;
+    white-space: nowrap;
 }
 
 .additionalTimeSection {
@@ -118,7 +121,10 @@
     align-items: center;
     justify-content: center;
     height: 100%;
+    min-width: 0;
     background: var(--color-green);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    width: clamp(52px, 7vmin, 80px);
+    width: clamp(56px, 7.5vmin, 88px);
+    padding: 0 6px;
+    white-space: nowrap;
 }

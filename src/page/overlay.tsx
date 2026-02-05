@@ -237,10 +237,15 @@ export default function OverlayPage() {
         return map;
     }, [players]);
 
-    const matchStatusEvents = useMemo(
-        () => transformEventsForMatchStatus(matchEvents, playerById, match),
-        [matchEvents, playerById, match],
-    );
+    const matchStatusEvents = useMemo(() => {
+        const all = transformEventsForMatchStatus(
+            matchEvents,
+            playerById,
+            match,
+        );
+        if (phase === 'POST_MATCH') return all;
+        return all.filter((e) => e.type === 'goal' || e.type === 'red');
+    }, [matchEvents, playerById, match, phase]);
 
     // Khi không có match: xóa dữ liệu để tránh hiển thị stale
     useEffect(() => {
