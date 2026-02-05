@@ -444,6 +444,15 @@ export default function OverlayPage() {
         return () => window.clearTimeout(timer);
     }, [currentToast]);
 
+    // Khi chuyển phase (ví dụ sang nghỉ giữa hiệp, hết giờ...), ẩn ngay các event toast
+    useEffect(() => {
+        if (!phase) return;
+        queueMicrotask(() => {
+            setToastQueue([]);
+            setDisplayToast(null);
+        });
+    }, [phase]);
+
     // Realtime: overlay_control
     useEffect(() => {
         if (!initial.userId) return;
