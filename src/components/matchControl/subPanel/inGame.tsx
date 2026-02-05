@@ -499,7 +499,8 @@ export default function InGamePanel({
             // Update player states
             await updatePlayer(Number(subPlayerOutId), userId, {
                 is_on_field: false,
-                is_substitute: false,
+                // Cầu thủ ra sân trở về trạng thái dự bị, có thể vào lại
+                is_substitute: true,
             });
             await updatePlayer(Number(subPlayerInId), userId, {
                 is_on_field: true,
