@@ -204,7 +204,7 @@
 @keyframes overlayLineupFadeIn {
     from {
         opacity: 0;
-        transform: translate(-50%, calc(-52% + var(--lineup-offset-y)));
+        transform: translate(-50%, calc(-48% + var(--lineup-offset-y)));
     }
     to {
         opacity: 1;
