@@ -182,8 +182,8 @@ function eventToToastItem(
             id: ev.id,
             type: typeLabel,
             // fallback (nếu component cũ vẫn dùng message)
-            message: `${timeLabel}' ${playerOutLabel} ra, ${playerLabel} vào`,
-            inText: `${timeLabel}' VÀO: ${playerLabel}`,
+            message: `${playerOutLabel} ra, ${playerLabel} vào`,
+            inText: `VÀO: ${playerLabel}`,
             outText: `RA: ${playerOutLabel}`,
         };
     }
@@ -203,6 +203,7 @@ export type MatchStatusEvent = {
     minute: number;
     displayMinute: string;
     type: string;
+    typeLabel: string;
 };
 
 function transformEventsForMatchStatus(
@@ -214,27 +215,35 @@ function transformEventsForMatchStatus(
     const homeTeamId = match.home_team;
     const awayTeamId = match.away_team;
 
-    return events.map((ev) => {
-        const p = playerById.get(ev.player_id);
-        const team: 'home' | 'away' =
-            p?.team_id === homeTeamId
-                ? 'home'
-                : p?.team_id === awayTeamId
-                  ? 'away'
-                  : 'home';
-        const playerName = p
-            ? p.nickname?.trim() || p.full_name?.trim() || ''
-            : '';
-        return {
-            id: ev.id,
-            team,
-            shirtNumber: p?.number ?? 0,
-            playerName,
-            minute: ev.minute,
-            displayMinute: formatEventMinute(ev),
-            type: EVENT_TYPE_MAP[ev.type] ?? ev.type.toLowerCase(),
-        };
-    });
+    return events
+        .filter((ev) => ev.type !== 'SUB')
+        .map((ev) => {
+            const p = playerById.get(ev.player_id);
+            const team: 'home' | 'away' =
+                p?.team_id === homeTeamId
+                    ? 'home'
+                    : p?.team_id === awayTeamId
+                      ? 'away'
+                      : 'home';
+            const playerName = p
+                ? p.nickname?.trim() || p.full_name?.trim() || ''
+                : '';
+            return {
+                id: ev.id,
+                team,
+                shirtNumber: p?.number ?? 0,
+                playerName,
+                minute: ev.minute,
+                displayMinute: formatEventMinute(ev),
+                type: EVENT_TYPE_MAP[ev.type] ?? ev.type.toLowerCase(),
+                typeLabel:
+                    EVENT_TYPE_LABELS[
+                        ev.type as keyof typeof EVENT_TYPE_LABELS
+                    ] ??
+                    EVENT_TYPE_MAP[ev.type] ??
+                    ev.type.toLowerCase(),
+            };
+        });
 }
 
 export default function OverlayPage() {

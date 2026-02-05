@@ -1,8 +1,8 @@
 import styles from './EventToast.module.css';
 
 function EventToast({
-    type = "TYPE",
-    message = "Event Message",
+    type = 'TYPE',
+    message = 'Event Message',
     inText,
     outText,
 }) {
@@ -13,12 +13,12 @@ function EventToast({
                 <div className={styles.eventToastDetails}>
                     {inText ? (
                         <>
-                            <div className={styles.eventToastIn}>{inText}</div>
                             {outText ? (
                                 <div className={styles.eventToastOut}>
                                     {outText}
                                 </div>
                             ) : null}
+                            <div className={styles.eventToastIn}>{inText}</div>
                         </>
                     ) : (
                         <div className={styles.eventToastSingle}>{message}</div>

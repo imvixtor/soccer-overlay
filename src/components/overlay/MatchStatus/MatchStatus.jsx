@@ -39,7 +39,7 @@ function MatchStatus({
                             {event.type && event.type !== 'goal' && (
                                 <span className={styles.eventType}>
                                     {' '}
-                                    ({event.type})
+                                    ({event.typeLabel ?? event.type})
                                 </span>
                             )}
                         </div>
@@ -53,7 +53,7 @@ function MatchStatus({
                             {event.type && event.type !== 'goal' && (
                                 <span className={styles.eventType}>
                                     {' '}
-                                    ({event.type})
+                                    ({event.typeLabel ?? event.type})
                                 </span>
                             )}
                         </div>

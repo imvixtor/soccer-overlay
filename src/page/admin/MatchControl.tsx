@@ -7,6 +7,7 @@ import {
     getBreadcrumbPhases,
     getNextPhaseWithConfig,
     PHASE_LABELS,
+    PHASE_ORDER,
     getTimeOffset,
     isClockStoppedPhase,
     formatMatchTimeSeconds,
@@ -23,6 +24,39 @@ import { supabase } from '@/lib/supabase/client';
 import { upsertOverlayControl } from '@/services/control.api';
 
 const DEFAULT_PHASE: MatchPhase = 'INITIATION';
+
+function getBreadcrumbPhasesWithConfig(
+    current: MatchPhase,
+    extraDuration: number,
+    hasPenaltyShootout: boolean,
+): MatchPhase[] {
+    let order = PHASE_ORDER;
+
+    // Nếu không có hiệp phụ: ẩn toàn bộ phase hiệp phụ khỏi breadcrumb
+    if (extraDuration === 0) {
+        order = order.filter(
+            (p) =>
+                p !== 'EXTIME_FIRST_HALF' &&
+                p !== 'EXTIME_HALF_TIME' &&
+                p !== 'EXTIME_SECOND_HALF',
+        );
+    }
+
+    // Nếu không có luân lưu: ẩn phase penalty khỏi breadcrumb
+    if (!hasPenaltyShootout) {
+        order = order.filter((p) => p !== 'PENALTY_SHOOTOUT');
+    }
+
+    const len = order.length;
+    const i = order.indexOf(current);
+    if (i < 0) {
+        // Fallback: trong trường hợp phase hiện tại không nằm trong order đã lọc
+        return getBreadcrumbPhases(current);
+    }
+    if (i === 0) return order.slice(0, Math.min(3, len));
+    if (i === len - 1) return order.slice(Math.max(0, len - 3), len);
+    return order.slice(i - 1, i + 2);
+}
 
 type ViewMode = 'match' | 'overlay';
 
@@ -140,10 +174,14 @@ export default function MatchControlPage() {
         matchConfig?.extra_duration,
     ]);
 
-    const phase = match?.phase ?? DEFAULT_PHASE;
-    const breadcrumbPhases = getBreadcrumbPhases(phase);
     const extraDuration = matchConfig?.extra_duration ?? 0;
     const hasPenaltyShootout = matchConfig?.has_penalty_shootout ?? false;
+    const phase = match?.phase ?? DEFAULT_PHASE;
+    const breadcrumbPhases = getBreadcrumbPhasesWithConfig(
+        phase,
+        extraDuration,
+        hasPenaltyShootout,
+    );
     const next = getNextPhaseWithConfig(
         phase,
         extraDuration,
