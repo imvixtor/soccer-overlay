@@ -3,26 +3,26 @@
 /* ─── Cấu hình font (chỉnh tại đây) ─── */
 .overlayLineup {
     --overlay-space: clamp(10px, 3vmin, 56px);
-    --overlay-fs-xs: clamp(9px, 2.2vmin, 12px);
-    --overlay-fs-sm: clamp(11px, 2.4vmin, 15px);
-    --overlay-fs-base: clamp(13px, 2.8vmin, 19px);
-    --overlay-fs-lg: clamp(15px, 3.4vmin, 24px);
+    --overlay-fs-xs: clamp(10px, 2.4vmin, 14px);
+    --overlay-fs-sm: clamp(12px, 2.6vmin, 17px);
+    --overlay-fs-base: clamp(14px, 3vmin, 20px);
+    --overlay-fs-lg: clamp(16px, 3.6vmin, 26px);
     --lineup-font:
         'Inter', 'Fira Sans Condensed', system-ui, -apple-system,
         BlinkMacSystemFont, 'Segoe UI', sans-serif;
     /* Top + Bottom bar */
-    --lineup-top-size: 16px;
+    --lineup-top-size: 18px;
     --lineup-top-weight: 700;
     --lineup-top-ls: 1.4px;
-    --lineup-team-name-size: 16px;
+    --lineup-team-name-size: 18px;
     /* Middle - Left bar (dự bị, HLV) */
-    --lineup-middle-title-size: 16px;
+    --lineup-middle-title-size: 18px;
     --lineup-middle-title-weight: 700;
     --lineup-middle-title-ls: 1.1px;
-    --lineup-middle-body-size: 14px;
+    --lineup-middle-body-size: 16px;
     /* Middle - Pitch (cầu thủ trên sân) */
-    --lineup-player-size: 14px;
-    --lineup-player-number-size: 16px;
+    --lineup-player-size: 16px;
+    --lineup-player-number-size: 18px;
     --lineup-player-weight: 400;
 
     position: fixed;
@@ -98,8 +98,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: clamp(14px, 2.5vmin, 34px) clamp(12px, 1.8vmin, 24px) clamp(14px, 2.5vmin, 34px)
-        clamp(20px, 3.5vmin, 48px);
+    padding: clamp(14px, 2.5vmin, 34px) clamp(12px, 1.8vmin, 24px)
+        clamp(14px, 2.5vmin, 34px) clamp(20px, 3.5vmin, 48px);
 }
 
 .overlayLineupLeftTitle {

@@ -57,8 +57,8 @@ function ScoreBug({
         <div className={styles.scoreBugWrapper}>
             <div className={styles.leagueName}>
                 {league}
-                {agency && <span> - {agency}</span>}
-                {isPenaltyPhase && <span> - Penalty</span>}
+                {agency && <span>&nbsp;-&nbsp;{agency}</span>}
+                {isPenaltyPhase && <span>&nbsp;-&nbsp;Penalty</span>}
             </div>
             <div className={styles.scoreBugMain}>
                 <div className={styles.teamSection}>

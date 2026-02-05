@@ -71,7 +71,7 @@ function MatchStatus({
                 </div>
                 <div className={styles.scoreBox}>
                     <div className={styles.mainScore}>
-                        {homeScore} - {awayScore}
+                        {homeScore}&nbsp;-&nbsp;{awayScore}
                     </div>
                     {hasPenalty && (
                         <div className={styles.penaltyScore}>
