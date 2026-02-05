@@ -668,7 +668,7 @@ export default function OverlayPage() {
             <OverlayFade show={!!ctrl.match_status_enable}>
                 <MatchStatus
                     matchTime={displayMatchTime}
-                    showMatchTime={phase !== 'POST_MATCH'}
+                    showMatchTime={isClockRunningPhase(phase)}
                     period={periodLabel}
                     league={league}
                     homeTeam={homeName}
