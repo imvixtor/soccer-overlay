@@ -6,7 +6,7 @@ export type MatchEventRow = Tables<'match_events'>;
 type MatchEventInsert = TablesInsert<'match_events'>;
 type MatchEventUpdate = TablesUpdate<'match_events'>;
 
-/** List events for a match, ordered by minute then created_at. */
+/** List events for a match, ordered by minute, bonus_minute, then created_at. */
 export async function listMatchEventsByMatchId(
     matchId: number,
 ): Promise<{ data: MatchEventRow[]; error: Error | null }> {
@@ -15,6 +15,7 @@ export async function listMatchEventsByMatchId(
         .select()
         .eq('match_id', matchId)
         .order('minute', { ascending: true })
+        .order('bonus_minute', { ascending: true, nullsFirst: true })
         .order('created_at', { ascending: true });
     return { data: data ?? [], error: error ?? null };
 }
@@ -23,7 +24,7 @@ export async function listMatchEventsByMatchId(
 export async function createMatchEvent(
     payload: Pick<
         MatchEventInsert,
-        'match_id' | 'minute' | 'player_id' | 'type'
+        'match_id' | 'minute' | 'player_id' | 'type' | 'bonus_minute' | 'phase'
     > & { player_out_id?: number | null },
 ): Promise<{ data: MatchEventRow | null; error: Error | null }> {
     const { data, error } = await supabase

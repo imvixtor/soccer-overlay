@@ -21,12 +21,20 @@ type MatchEventDetailed = {
     created_at: string;
     match_id: number;
     minute: number;
+    bonus_minute: number | null;
     player_id: number;
     player_out_id: number | null;
     type: EventType;
     players: PlayerLite | null;
     player_out: PlayerLite | null;
 };
+
+function formatEventMinute(ev: Pick<MatchEventDetailed, 'minute' | 'bonus_minute'>) {
+    const base = ev.minute;
+    const bonus = ev.bonus_minute ?? 0;
+    if (bonus > 0) return `${base}+${bonus}`;
+    return `${base}`;
+}
 
 function playerLabel(p: PlayerLite | null) {
     return formatPlayerLabel(p, 'Unknown player');
@@ -72,13 +80,14 @@ export function MatchStats({ match }: MatchStatsProps) {
                 .from('match_events')
                 .select(
                     `
-                    id, created_at, match_id, minute, player_id, player_out_id, type,
+                    id, created_at, match_id, minute, bonus_minute, player_id, player_out_id, type,
                     players:players!match_events_player_id_fkey(id, full_name, nickname, number, team_id),
                     player_out:players!match_events_player_out_id_fkey(id, full_name, nickname, number, team_id)
                 `,
                 )
                 .eq('match_id', matchId)
                 .order('minute', { ascending: true })
+                .order('bonus_minute', { ascending: true, nullsFirst: true })
                 .order('created_at', { ascending: true });
             if (res.error) throw res.error;
             setEvents((res.data ?? []) as MatchEventDetailed[]);
@@ -203,7 +212,7 @@ export function MatchStats({ match }: MatchStatsProps) {
                                         className="grid grid-cols-12 gap-2 px-3 py-2 text-sm border-t"
                                     >
                                         <div className="col-span-2">
-                                            {ev.minute}'
+                                            {formatEventMinute(ev)}'
                                         </div>
                                         <div className="col-span-3">
                                             <span

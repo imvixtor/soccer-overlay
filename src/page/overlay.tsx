@@ -147,6 +147,13 @@ type PlayerForEvents = {
 
 const TOAST_DURATION_MS = 10000;
 
+function formatEventMinute(ev: MatchEventRow): string {
+    const base = ev.minute;
+    const bonus = ev.bonus_minute ?? 0;
+    if (bonus > 0) return `${base}+${bonus}`;
+    return `${base}`;
+}
+
 export type ToastItem = {
     id: number;
     type: string;
@@ -169,21 +176,22 @@ function eventToToastItem(
     const playerOutLabel = pOut
         ? `#${pOut.number} ${pOut.nickname?.trim() || pOut.full_name?.trim() || ''}`
         : null;
+    const timeLabel = formatEventMinute(ev);
     if (ev.type === 'SUB' && playerOutLabel) {
         return {
             id: ev.id,
             type: typeLabel,
             // fallback (nếu component cũ vẫn dùng message)
-            message: `${ev.minute}' ${playerOutLabel} ra, ${playerLabel} vào`,
-            inText: `VÀO: ${playerLabel.toLowerCase()}`,
-            outText: `RA: ${playerOutLabel.toLowerCase()}`,
+            message: `${timeLabel}' ${playerOutLabel} ra, ${playerLabel} vào`,
+            inText: `${timeLabel}' VÀO: ${playerLabel}`,
+            outText: `RA: ${playerOutLabel}`,
         };
     }
 
     return {
         id: ev.id,
         type: typeLabel,
-        message: `${ev.minute}' ${playerLabel}`,
+        message: `${timeLabel}' ${playerLabel}`,
     };
 }
 
@@ -193,6 +201,7 @@ export type MatchStatusEvent = {
     shirtNumber: number;
     playerName: string;
     minute: number;
+    displayMinute: string;
     type: string;
 };
 
@@ -222,6 +231,7 @@ function transformEventsForMatchStatus(
             shirtNumber: p?.number ?? 0,
             playerName,
             minute: ev.minute,
+            displayMinute: formatEventMinute(ev),
             type: EVENT_TYPE_MAP[ev.type] ?? ev.type.toLowerCase(),
         };
     });
@@ -358,12 +368,17 @@ export default function OverlayPage() {
                     const newRow = payload.new as MatchEventRow;
                     setMatchEvents((prev) => {
                         if (prev.some((e) => e.id === newRow.id)) return prev;
-                        const next = [...prev, newRow].sort(
-                            (a, b) =>
-                                a.minute - b.minute ||
+                        const next = [...prev, newRow].sort((a, b) => {
+                            const byMinute = a.minute - b.minute;
+                            if (byMinute !== 0) return byMinute;
+                            const aBonus = a.bonus_minute ?? 0;
+                            const bBonus = b.bonus_minute ?? 0;
+                            if (aBonus !== bBonus) return aBonus - bBonus;
+                            return (
                                 new Date(a.created_at || 0).getTime() -
-                                    new Date(b.created_at || 0).getTime(),
-                        );
+                                new Date(b.created_at || 0).getTime()
+                            );
+                        });
                         return next;
                     });
                     const toastItem = eventToToastItem(newRow, playerById);

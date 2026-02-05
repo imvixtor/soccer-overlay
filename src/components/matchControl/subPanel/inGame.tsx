@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import {
     EVENT_TYPE_LABELS,
     getTimeOffset,
+    getRegulationEndSeconds,
     type EventType,
     type MatchPhase,
 } from '@/lib/match-constants';
@@ -119,7 +120,7 @@ function InGameEventsTable({
                                     className="grid grid-cols-12 gap-2 px-3 py-2 text-sm border-t items-center"
                                 >
                                     <div className="col-span-2">
-                                        {ev.minute}'
+                                        {formatEventMinute(ev)}'
                                     </div>
                                     <div className="col-span-3">
                                         <span
@@ -171,6 +172,46 @@ function InGameEventsTable({
             )}
         </div>
     );
+}
+
+function computeOfficialMinute(
+    phase: MatchPhase,
+    currentMinute: number,
+    halfDuration: number,
+    extraDuration: number,
+): { minute: number; bonus_minute: number | null } {
+    // Dựa trên quy tắc match-constants: mốc kết thúc hiệp chính cho phase hiện tại
+    const regEndSeconds = getRegulationEndSeconds(
+        phase,
+        halfDuration,
+        extraDuration,
+    );
+    const regEndMinute = Number.isFinite(regEndSeconds)
+        ? Math.floor(regEndSeconds / 60)
+        : null;
+
+    // Nếu phase không có mốc (Infinity) hoặc còn trong thời gian chính thức
+    if (
+        regEndMinute == null ||
+        currentMinute <= regEndMinute ||
+        currentMinute <= 0
+    ) {
+        return { minute: currentMinute, bonus_minute: null };
+    }
+
+    const bonus = currentMinute - regEndMinute;
+    if (bonus <= 0) {
+        return { minute: currentMinute, bonus_minute: null };
+    }
+    // Ví dụ: hiệp 1 30', event ở phút 33  → minute = 30, bonus = 3
+    return { minute: regEndMinute, bonus_minute: bonus };
+}
+
+function formatEventMinute(ev: Pick<MatchEventRow, 'minute' | 'bonus_minute'>) {
+    const base = ev.minute;
+    const bonus = ev.bonus_minute ?? 0;
+    if (bonus > 0) return `${base}+${bonus}`;
+    return `${base}`;
 }
 
 function teamLabel(p: PlayerRowLite, match: MatchWithTeams | null) {
@@ -324,11 +365,20 @@ export default function InGamePanel({
             const player = playerById.get(Number(selectedPlayerId));
             if (!player) throw new Error('Cầu thủ không hợp lệ');
 
+            const { minute, bonus_minute } = computeOfficialMinute(
+                phase,
+                currentMinute,
+                halfDuration,
+                extraDuration,
+            );
+
             const { error } = await createMatchEvent({
                 match_id: matchId,
-                minute: currentMinute,
+                minute,
+                bonus_minute,
                 player_id: Number(selectedPlayerId),
                 type: 'GOAL',
+                phase,
             });
             if (error) throw error;
 
@@ -374,11 +424,19 @@ export default function InGamePanel({
             if (cardType !== 'YELLOW' && cardType !== 'RED') {
                 throw new Error('Loại thẻ không hợp lệ');
             }
+            const { minute, bonus_minute } = computeOfficialMinute(
+                phase,
+                currentMinute,
+                halfDuration,
+                extraDuration,
+            );
             const { error } = await createMatchEvent({
                 match_id: matchId,
-                minute: currentMinute,
+                minute,
+                bonus_minute,
                 player_id: Number(selectedPlayerId),
                 type: cardType,
+                phase,
             });
             if (error) throw error;
 
@@ -421,12 +479,20 @@ export default function InGamePanel({
         }
         setIsSubmitting(true);
         try {
+            const { minute, bonus_minute } = computeOfficialMinute(
+                phase,
+                currentMinute,
+                halfDuration,
+                extraDuration,
+            );
             const { error } = await createMatchEvent({
                 match_id: matchId,
-                minute: currentMinute,
+                minute,
+                bonus_minute,
                 player_id: Number(subPlayerInId),
                 player_out_id: Number(subPlayerOutId),
                 type: 'SUB',
+                phase,
             });
             if (error) throw error;
 

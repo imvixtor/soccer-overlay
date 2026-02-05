@@ -34,7 +34,7 @@ function MatchStatus({
                 <div className={styles.eventsLeft}>
                     {homeEvents.map((event) => (
                         <div key={event.id} className={styles.eventItem}>
-                            {event.minute}&apos; {event.playerName}{' '}
+                            {(event.displayMinute ?? event.minute)}&apos; {event.playerName}{' '}
                             {event.shirtNumber}
                             {event.type && event.type !== 'goal' && (
                                 <span className={styles.eventType}>
@@ -48,7 +48,7 @@ function MatchStatus({
                 <div className={styles.eventsRight}>
                     {awayEvents.map((event) => (
                         <div key={event.id} className={styles.eventItem}>
-                            {event.minute}&apos; {event.playerName}{' '}
+                            {(event.displayMinute ?? event.minute)}&apos; {event.playerName}{' '}
                             {event.shirtNumber}
                             {event.type && event.type !== 'goal' && (
                                 <span className={styles.eventType}>
