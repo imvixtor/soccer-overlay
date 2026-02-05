@@ -151,6 +151,8 @@ export type ToastItem = {
     id: number;
     type: string;
     message: string;
+    inText?: string;
+    outText?: string;
 };
 
 function eventToToastItem(
@@ -167,11 +169,22 @@ function eventToToastItem(
     const playerOutLabel = pOut
         ? `#${pOut.number} ${pOut.nickname?.trim() || pOut.full_name?.trim() || ''}`
         : null;
-    const message =
-        ev.type === 'SUB' && playerOutLabel
-            ? `${ev.minute}' ${playerOutLabel} ra, ${playerLabel} vào`
-            : `${ev.minute}' ${playerLabel}`;
-    return { id: ev.id, type: typeLabel, message };
+    if (ev.type === 'SUB' && playerOutLabel) {
+        return {
+            id: ev.id,
+            type: typeLabel,
+            // fallback (nếu component cũ vẫn dùng message)
+            message: `${ev.minute}' ${playerOutLabel} ra, ${playerLabel} vào`,
+            inText: `VÀO: ${playerLabel.toLowerCase()}`,
+            outText: `RA: ${playerOutLabel.toLowerCase()}`,
+        };
+    }
+
+    return {
+        id: ev.id,
+        type: typeLabel,
+        message: `${ev.minute}' ${playerLabel}`,
+    };
 }
 
 export type MatchStatusEvent = {
@@ -638,7 +651,13 @@ export default function OverlayPage() {
                             <EventToast
                                 key={(currentToast ?? displayToast)!.id}
                                 type={(currentToast ?? displayToast)!.type}
-                                message={(currentToast ?? displayToast)!.message}
+                                message={
+                                    (currentToast ?? displayToast)!.message
+                                }
+                                inText={(currentToast ?? displayToast)!.inText}
+                                outText={
+                                    (currentToast ?? displayToast)!.outText
+                                }
                             />
                         )}
                     </OverlayFade>
