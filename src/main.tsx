@@ -6,6 +6,7 @@ import './index.css';
 import App from './App.tsx';
 import AdminLayout from './page/layouts/AdminLayout.tsx';
 import LoadingPage from './page/loading.tsx';
+import ErrorPage from './page/ErrorPage.tsx';
 import { authMiddleware } from './middlewares/auth.middleware.tsx';
 import { userLoader } from './services/user.loader.tsx';
 import { overlayLoader } from './services/overlay.loader.tsx';
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
     {
         path: '/',
         element: <App />,
+        errorElement: <ErrorPage />,
     },
     {
         path: '/overlay/:userId',
@@ -26,6 +28,7 @@ const router = createBrowserRouter([
                 Component: module.default,
             })),
         hydrateFallbackElement: <LoadingPage />,
+        errorElement: <ErrorPage />,
     },
     {
         path: '/auth/login',
@@ -34,6 +37,7 @@ const router = createBrowserRouter([
                 Component: module.default,
             })),
         hydrateFallbackElement: <LoadingPage />,
+        errorElement: <ErrorPage />,
     },
     {
         path: '/auth/sign-up',
@@ -42,6 +46,7 @@ const router = createBrowserRouter([
                 Component: module.default,
             })),
         hydrateFallbackElement: <LoadingPage />,
+        errorElement: <ErrorPage />,
     },
     {
         path: '/auth/forgot-password',
@@ -50,6 +55,7 @@ const router = createBrowserRouter([
                 Component: module.default,
             })),
         hydrateFallbackElement: <LoadingPage />,
+        errorElement: <ErrorPage />,
     },
     {
         path: '/auth/update-password',
@@ -58,11 +64,13 @@ const router = createBrowserRouter([
                 Component: module.default,
             })),
         hydrateFallbackElement: <LoadingPage />,
+        errorElement: <ErrorPage />,
     },
     {
         path: '/admin',
         middleware: [authMiddleware],
         element: <AdminLayout />,
+        errorElement: <ErrorPage />,
         children: [
             {
                 index: true,
