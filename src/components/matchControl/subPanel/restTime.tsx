@@ -46,6 +46,13 @@ export default function RestTimePanel({
     const current = overlayControl ?? {
         lineup_enable: false,
         away_lineup: false,
+        commentary_script: null,
+        // Các field còn lại không dùng trong RestTimePanel nhưng cần cho type đầy đủ
+        id: 0,
+        user_id: userId ?? '',
+        match_status_enable: false,
+        scorebug_enable: true,
+        clock_enable: true,
     };
     const isLineupHomeActive = current.lineup_enable && !current.away_lineup;
     const isLineupAwayActive = current.lineup_enable && current.away_lineup;
@@ -62,6 +69,7 @@ export default function RestTimePanel({
                 scorebug_enable: true,
                 clock_enable: true,
                 away_lineup: false,
+                commentary_script: null,
             };
             const isActive = showHome ? isLineupHomeActive : isLineupAwayActive;
             const next: OverlayControlRow = isActive
