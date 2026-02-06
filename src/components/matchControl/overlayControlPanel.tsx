@@ -151,6 +151,12 @@ export default function OverlayControlPanel({
         user_id: userId,
     };
 
+    const isGeneratingScript =
+        !current.commentary_script &&
+        phase != null &&
+        phase !== 'INITIATION' &&
+        phase !== 'PREPARATION';
+
     const isLineupHomeActive = current.lineup_enable && !current.away_lineup;
     const isLineupAwayActive = current.lineup_enable && current.away_lineup;
 
@@ -346,9 +352,13 @@ export default function OverlayControlPanel({
                         Kịch bản bình luận (AI Gemini)
                     </p>
                     <div className="rounded-md border bg-muted/40 p-3 max-h-64 overflow-auto text-sm whitespace-pre-wrap">
-                        {current.commentary_script?.trim()
-                            ? current.commentary_script
-                            : 'Chưa có kịch bản. Khi bạn chuyển phase (trừ Khởi tạo / Chuẩn bị), hệ thống sẽ tự sinh kịch bản bình luận mới bằng AI và hiển thị tại đây.'}
+                        {current.commentary_script?.trim() ? (
+                            current.commentary_script
+                        ) : isGeneratingScript ? (
+                            'Đang sinh kịch bản bình luận bằng AI… Vui lòng chờ trong giây lát.'
+                        ) : (
+                            'Chưa có kịch bản. Khi bạn chuyển phase (trừ Khởi tạo / Chuẩn bị), hệ thống sẽ tự sinh kịch bản bình luận mới bằng AI và hiển thị tại đây.'
+                        )}
                     </div>
                     <p className="text-xs text-muted-foreground">
                         Đây là kịch bản gợi ý để bạn đọc trên sóng. Hãy tùy chỉnh lại

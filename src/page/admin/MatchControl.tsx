@@ -307,12 +307,11 @@ export default function MatchControlPage() {
         if (!match?.id || !next || !isPreparationReady) return;
         const { error } = await updateMatchPhase(match.id, next);
         if (!error) {
-            await Promise.all([
-                autoAdjustOverlayForPhase(next),
-                userId
-                    ? generateAndSaveCommentaryScriptForPhase(userId, next)
-                    : Promise.resolve(),
-            ]);
+            await autoAdjustOverlayForPhase(next);
+            // Sinh kịch bản bình luận ở nền, không chặn chuyển phase
+            if (userId) {
+                void generateAndSaveCommentaryScriptForPhase(userId, next);
+            }
             revalidate();
         }
     };
@@ -321,15 +320,13 @@ export default function MatchControlPage() {
         if (!match?.id) return;
         const { error } = await updateMatchPhase(match.id, 'POST_MATCH');
         if (!error) {
-            await Promise.all([
-                autoAdjustOverlayForPhase('POST_MATCH'),
-                userId
-                    ? generateAndSaveCommentaryScriptForPhase(
-                          userId,
-                          'POST_MATCH',
-                      )
-                    : Promise.resolve(),
-            ]);
+            await autoAdjustOverlayForPhase('POST_MATCH');
+            if (userId) {
+                void generateAndSaveCommentaryScriptForPhase(
+                    userId,
+                    'POST_MATCH',
+                );
+            }
             revalidate();
         }
     };
