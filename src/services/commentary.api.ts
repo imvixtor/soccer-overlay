@@ -4,6 +4,7 @@ import { getMatchWithTeams } from './matches.api';
 import { getMatchConfig } from './match-config.api';
 import { listMatchEventsByMatchId } from './match-events.api';
 import { upsertOverlayControl } from './control.api';
+import { supabase } from '@/lib/supabase/client';
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
@@ -23,13 +24,29 @@ function getGeminiClient() {
     return new GoogleGenAI({ apiKey });
 }
 
+type PromptMatch = Awaited<ReturnType<typeof getMatchWithTeams>>['data'];
+type PromptMatchConfig = Awaited<ReturnType<typeof getMatchConfig>>['data'];
+type PromptEvents = Awaited<
+    ReturnType<typeof listMatchEventsByMatchId>
+>['data'];
+
+type PromptPlayer = {
+    id: number;
+    full_name: string | null;
+    nickname: string | null;
+    number: number;
+    team_id: number | null;
+    is_on_field: boolean;
+};
+
 function buildPrompt(options: {
     phase: MatchPhase;
-    match: Awaited<ReturnType<typeof getMatchWithTeams>>['data'];
-    matchConfig: Awaited<ReturnType<typeof getMatchConfig>>['data'];
-    events: Awaited<ReturnType<typeof listMatchEventsByMatchId>>['data'];
+    match: PromptMatch;
+    matchConfig: PromptMatchConfig;
+    events: PromptEvents;
+    players: PromptPlayer[];
 }) {
-    const { phase, match, matchConfig, events } = options;
+    const { phase, match, matchConfig, events, players } = options;
     if (!match) {
         return null;
     }
@@ -65,7 +82,7 @@ function buildPrompt(options: {
     }
     if (yellows.length > 0) {
         eventsSummaryParts.push(
-            `Có ${yellows.length} thẻ vàng, hãy lồng ghép khía cạnh căng thẳng, quyết liệt.`,
+            `Có ${yellows.length} thẻ vàng, hãy lồng ghía cạnh căng thẳng, quyết liệt.`,
         );
     }
     if (reds.length > 0) {
@@ -73,6 +90,99 @@ function buildPrompt(options: {
             `Có ${reds.length} thẻ đỏ, hãy nhấn mạnh bước ngoặt về thế trận.`,
         );
     }
+
+    const playerById = new Map<number, PromptPlayer>();
+    for (const p of players) {
+        playerById.set(p.id, p);
+    }
+
+    const eventsDetailLines: string[] = events.map((ev) => {
+        const player = ev.player_id ? playerById.get(ev.player_id) : null;
+        const playerOut =
+            ev.player_out_id != null
+                ? playerById.get(ev.player_out_id)
+                : null;
+
+        const minuteLabel =
+            ev.bonus_minute && ev.bonus_minute > 0
+                ? `${ev.minute}+${ev.bonus_minute}'`
+                : `${ev.minute}'`;
+
+        const teamSide =
+            player?.team_id === match.home_team
+                ? home
+                : player?.team_id === match.away_team
+                  ? away
+                  : 'Đội chưa xác định';
+
+        const baseName = player
+            ? `#${player.number} ${
+                  player.nickname?.trim() || player.full_name?.trim() || ''
+              }`
+            : `Cầu thủ ID=${ev.player_id}`;
+
+        if (ev.type === 'SUB') {
+            const outName = playerOut
+                ? `#${playerOut.number} ${
+                      playerOut.nickname?.trim() ||
+                      playerOut.full_name?.trim() ||
+                      ''
+                  }`
+                : `Cầu thủ ID=${ev.player_out_id}`;
+            return `- ${minuteLabel} | THAY NGƯỜI | ${teamSide}: ${outName} rời sân, ${baseName} vào sân.`;
+        }
+
+        if (ev.type === 'GOAL') {
+            return `- ${minuteLabel} | BÀN THẮNG | ${teamSide}: ${baseName} ghi bàn.`;
+        }
+        if (ev.type === 'YELLOW') {
+            return `- ${minuteLabel} | THẺ VÀNG | ${teamSide}: ${baseName} nhận thẻ vàng.`;
+        }
+        if (ev.type === 'RED') {
+            return `- ${minuteLabel} | THẺ ĐỎ | ${teamSide}: ${baseName} bị truất quyền thi đấu.`;
+        }
+
+        return `- ${minuteLabel} | SỰ KIỆN ${ev.type} | ${teamSide}: ${baseName}.`;
+    });
+
+    const eventsDetailBlock =
+        eventsDetailLines.length > 0
+            ? `Danh sách sự kiện chi tiết theo thời gian (bạn hãy dùng như ghi chú nội bộ để tóm tắt lại mạch diễn biến, không cần đọc nguyên văn từng dòng):
+${eventsDetailLines.join('\n')}`
+            : 'Chưa có sự kiện (bàn thắng / thẻ / thay người) đáng chú ý nào được ghi nhận.';
+
+    const homeLineup = players
+        .filter(
+            (p) =>
+                p.is_on_field &&
+                p.team_id != null &&
+                p.team_id === match.home_team,
+        )
+        .sort((a, b) => a.number - b.number);
+    const awayLineup = players
+        .filter(
+            (p) =>
+                p.is_on_field &&
+                p.team_id != null &&
+                p.team_id === match.away_team,
+        )
+        .sort((a, b) => a.number - b.number);
+
+    const formatLineup = (list: PromptPlayer[]) =>
+        list
+            .map((p) => {
+                const name = p.nickname?.trim() || p.full_name?.trim() || '';
+                return `#${p.number} ${name}`.trim();
+            })
+            .join(', ');
+
+    const lineupBlock =
+        homeLineup.length || awayLineup.length
+            ? `Đội hình xuất phát (theo dữ liệu hiện tại, có thể điều chỉnh lại khi bình luận):
+- ${home}: ${homeLineup.length ? formatLineup(homeLineup) : 'chưa có dữ liệu đội hình trên sân.'}
+- ${away}: ${awayLineup.length ? formatLineup(awayLineup) : 'chưa có dữ liệu đội hình trên sân.'}
+`
+            : 'Chưa có dữ liệu đầy đủ về đội hình xuất phát, bạn có thể bình luận mang tính khái quát về lối chơi và con người của mỗi đội.';
 
     const commonContext = `
 Thông tin trận đấu:
@@ -84,6 +194,8 @@ Thông tin trận đấu:
 - Số cầu thủ mỗi đội trên sân: ${playersPerTeam}.
 - Có thi đấu luân lưu nếu hòa sau hiệp phụ: ${hasPenaltyShootout ? 'Có' : 'Không'}.
 ${eventsSummaryParts.length > 0 ? eventsSummaryParts.join('\n') : 'Hiện chưa có nhiều sự kiện nổi bật, hãy bình luận tập trung vào bối cảnh, chiến thuật và cảm xúc trận đấu.'}
+
+${eventsDetailBlock}
 `;
 
     let taskInstruction = '';
@@ -94,7 +206,7 @@ Bạn là BLV bóng đá chuyên nghiệp trên sóng truyền hình Việt Nam.
 Hãy viết một kịch bản lời dẫn ngắn gọn, mạch lạc cho giai đoạn TRƯỚC TRẬN:
 - Mở đầu giới thiệu không khí, tầm quan trọng của trận đấu giữa ${home} và ${away}.
 - Giới thiệu nhanh về phong độ, điểm đáng chú ý của hai đội.
-- Nhắc đến đội hình xuất phát (nói khái quát, không cần liệt kê đủ 11 cái tên).
+- Dựa trên khối thông tin "Đội hình xuất phát", hãy nói khái quát về cách bố trí con người và vài cái tên đáng chú ý của mỗi bên (không cần đọc hết danh sách, chỉ chọn lọc).
 - Văn phong tự nhiên, tiếng Việt, dùng “tôi / chúng ta” thân thiện với khán giả.
 - Độ dài khoảng 3–5 đoạn văn ngắn, dễ đọc một lèo trên sóng.
 `;
@@ -148,6 +260,8 @@ với văn phong tự nhiên, dễ đọc, khoảng 2–4 đoạn văn.
 
     return `${taskInstruction}
 ${commonContext}
+
+${lineupBlock}
 
 YÊU CẦU QUAN TRỌNG:
 - Chỉ trả về nội dung kịch bản, không giải thích thêm, không dùng markdown, không chèn tiêu đề.
@@ -203,18 +317,26 @@ export async function generateAndSaveCommentaryScriptForPhase(
             return;
         }
 
-        const [configRes, eventsRes] = await Promise.all([
+        const [configRes, eventsRes, playersRes] = await Promise.all([
             getMatchConfig(userId),
             listMatchEventsByMatchId(match.id),
+            supabase
+                .from('players')
+                .select(
+                    'id, full_name, nickname, number, team_id, is_on_field',
+                )
+                .eq('user_id', userId),
         ]);
         if (configRes.error) throw configRes.error;
         if (eventsRes.error) throw eventsRes.error;
+        if (playersRes.error) throw playersRes.error;
 
         const prompt = buildPrompt({
             phase,
             match,
             matchConfig: configRes.data,
             events: eventsRes.data,
+            players: (playersRes.data ?? []) as PromptPlayer[],
         });
         let script = '';
 
