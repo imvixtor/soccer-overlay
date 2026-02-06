@@ -6,7 +6,7 @@ import { listMatchEventsByMatchId } from './match-events.api';
 import { upsertOverlayControl } from './control.api';
 import { supabase } from '@/lib/supabase/client';
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemma-3-27b-it';
 
 const SCRIPT_PHASES: MatchPhase[] = [
     'PRE_MATCH',
@@ -99,9 +99,7 @@ function buildPrompt(options: {
     const eventsDetailLines: string[] = events.map((ev) => {
         const player = ev.player_id ? playerById.get(ev.player_id) : null;
         const playerOut =
-            ev.player_out_id != null
-                ? playerById.get(ev.player_out_id)
-                : null;
+            ev.player_out_id != null ? playerById.get(ev.player_out_id) : null;
 
         const minuteLabel =
             ev.bonus_minute && ev.bonus_minute > 0
@@ -361,9 +359,7 @@ export async function generateAndSaveCommentaryScriptForPhase(
             listMatchEventsByMatchId(match.id),
             supabase
                 .from('players')
-                .select(
-                    'id, full_name, nickname, number, team_id, is_on_field',
-                )
+                .select('id, full_name, nickname, number, team_id, is_on_field')
                 .eq('user_id', userId),
         ]);
         if (configRes.error) throw configRes.error;
