@@ -240,7 +240,7 @@ export default function MatchControlPage() {
                 return;
             }
 
-            // Vào hiệp đấu: tự động bật scorebug và match status, tắt lineup
+            // Vào hiệp đấu: tự động bật scorebug và match status, tắt lineup, xoá kịch bản cũ
             if (
                 newPhase === 'FIRST_HALF' ||
                 newPhase === 'SECOND_HALF' ||
@@ -252,6 +252,7 @@ export default function MatchControlPage() {
                     match_status_enable: true,
                     lineup_enable: false,
                     away_lineup: false,
+                    commentary_script: null,
                 });
                 return;
             }
@@ -278,13 +279,14 @@ export default function MatchControlPage() {
                 return;
             }
 
-            // Luân lưu: bật scorebug và match status, tắt lineup
+            // Luân lưu: bật scorebug và match status, tắt lineup, xoá kịch bản cũ
             if (newPhase === 'PENALTY_SHOOTOUT') {
                 await upsertOverlayControl(userId, {
                     scorebug_enable: true,
                     match_status_enable: true,
                     lineup_enable: false,
                     away_lineup: false,
+                    commentary_script: null,
                 });
                 return;
             }

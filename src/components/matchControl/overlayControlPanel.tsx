@@ -151,11 +151,15 @@ export default function OverlayControlPanel({
         user_id: userId,
     };
 
+    const isScriptPhase =
+        phase === 'PRE_MATCH' ||
+        phase === 'HALFTIME' ||
+        phase === 'EXTIME_HALF_TIME' ||
+        phase === 'FULLTIME' ||
+        phase === 'POST_MATCH';
+
     const isGeneratingScript =
-        !current.commentary_script &&
-        phase != null &&
-        phase !== 'INITIATION' &&
-        phase !== 'PREPARATION';
+        isScriptPhase && !current.commentary_script && hasInitialized;
 
     const isLineupHomeActive = current.lineup_enable && !current.away_lineup;
     const isLineupAwayActive = current.lineup_enable && current.away_lineup;

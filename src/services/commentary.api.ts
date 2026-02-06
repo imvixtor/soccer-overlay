@@ -7,6 +7,14 @@ import { upsertOverlayControl } from './control.api';
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
+const SCRIPT_PHASES: MatchPhase[] = [
+    'PRE_MATCH',
+    'HALFTIME',
+    'EXTIME_HALF_TIME',
+    'FULLTIME',
+    'POST_MATCH',
+];
+
 function getGeminiClient() {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
     if (!apiKey) {
@@ -42,6 +50,8 @@ function buildPrompt(options: {
             : '';
     const halfDuration = matchConfig?.half_duration ?? 45;
     const extraDuration = matchConfig?.extra_duration ?? 15;
+    const playersPerTeam = matchConfig?.players_per_team ?? 11;
+    const hasPenaltyShootout = matchConfig?.has_penalty_shootout ?? false;
 
     const goals = events.filter((e) => e.type === 'GOAL');
     const yellows = events.filter((e) => e.type === 'YELLOW');
@@ -71,6 +81,8 @@ Thông tin trận đấu:
 - Đội khách: ${away}
 - Tỉ số hiện tại: ${scoreLine}${penaltyLine}
 - Thời lượng mỗi hiệp chính: ${halfDuration} phút, hiệp phụ: ${extraDuration} phút.
+- Số cầu thủ mỗi đội trên sân: ${playersPerTeam}.
+- Có thi đấu luân lưu nếu hòa sau hiệp phụ: ${hasPenaltyShootout ? 'Có' : 'Không'}.
 ${eventsSummaryParts.length > 0 ? eventsSummaryParts.join('\n') : 'Hiện chưa có nhiều sự kiện nổi bật, hãy bình luận tập trung vào bối cảnh, chiến thuật và cảm xúc trận đấu.'}
 `;
 
@@ -177,8 +189,8 @@ export async function generateAndSaveCommentaryScriptForPhase(
     userId: string,
     phase: MatchPhase,
 ): Promise<void> {
-    // Không sinh script cho INITIATION và PREPARATION theo yêu cầu
-    if (phase === 'INITIATION' || phase === 'PREPARATION') return;
+    // Chỉ sinh script cho các phase nghỉ / tổng kết
+    if (!SCRIPT_PHASES.includes(phase)) return;
 
     const client = getGeminiClient();
 
