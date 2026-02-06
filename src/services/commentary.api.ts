@@ -74,10 +74,24 @@ function buildPrompt(options: {
     const yellows = events.filter((e) => e.type === 'YELLOW');
     const reds = events.filter((e) => e.type === 'RED');
 
+    const playerById = new Map<number, PromptPlayer>();
+    for (const p of players) {
+        playerById.set(p.id, p);
+    }
+
+    const homeGoalsFromEvents = goals.filter((ev) => {
+        const p = playerById.get(ev.player_id);
+        return p?.team_id === match.home_team;
+    }).length;
+    const awayGoalsFromEvents = goals.filter((ev) => {
+        const p = playerById.get(ev.player_id);
+        return p?.team_id === match.away_team;
+    }).length;
+
     const eventsSummaryParts: string[] = [];
     if (goals.length > 0) {
         eventsSummaryParts.push(
-            `Trong trận đã có ${goals.length} bàn thắng (hãy tóm tắt theo diễn biến hợp lý).`,
+            `Trong trận đã có ${goals.length} bàn thắng (theo dữ liệu sự kiện).`,
         );
     }
     if (yellows.length > 0) {
@@ -89,11 +103,6 @@ function buildPrompt(options: {
         eventsSummaryParts.push(
             `Có ${reds.length} thẻ đỏ, hãy nhấn mạnh bước ngoặt về thế trận.`,
         );
-    }
-
-    const playerById = new Map<number, PromptPlayer>();
-    for (const p of players) {
-        playerById.set(p.id, p);
     }
 
     const eventsDetailLines: string[] = events.map((ev) => {
@@ -188,6 +197,7 @@ Thông tin trận đấu:
 - Đội chủ nhà: ${home}
 - Đội khách: ${away}
 - Tỉ số hiện tại: ${scoreLine}${penaltyLine}
+- Số bàn thắng của ${home}: ${homeGoalsFromEvents}, của ${away}: ${awayGoalsFromEvents} (tính theo danh sách sự kiện).
 - Thời lượng mỗi hiệp chính: ${halfDuration} phút, hiệp phụ: ${extraDuration} phút.
 - Số cầu thủ mỗi đội trên sân: ${playersPerTeam}.
 - Có thi đấu luân lưu nếu hòa sau hiệp phụ: ${hasPenaltyShootout ? 'Có' : 'Không'}.
@@ -234,6 +244,7 @@ Hãy viết kịch bản TỔNG KẾT TRẬN ĐẤU khi trận đấu đã khép
 - Nhắc lại tỉ số chung cuộc ${scoreLine}${penaltyLine}.
 - Tóm tắt mạch diễn biến chính của trận: những bàn thắng quan trọng, bước ngoặt, thẻ phạt.
 - Đánh giá ngắn gọn màn trình diễn của ${home} và ${away}, chỉ ra những điểm nhấn.
+- Khi kết luận về kết quả, tuyệt đối dựa đúng vào tỉ số ${scoreLine}: nếu tỉ số hòa thì nói rõ là "một trận hòa", không được nói đội nào giành chiến thắng.
 - Cuối kịch bản, gửi lời cảm ơn khán giả và hẹn gặp lại ở trận đấu tiếp theo.
 - Văn phong tự nhiên, tiếng Việt, nói như đang lên sóng, không cần xưng tên BLV.
 - Độ dài khoảng 4–7 đoạn văn ngắn.
@@ -266,6 +277,7 @@ Hãy viết kịch bản TỔNG KẾT TRẬN ĐẤU khi trận đấu đã khép
 - Tóm tắt mạch diễn biến chính của trận: những bàn thắng quan trọng, bước ngoặt, thẻ phạt, bao gồm cả hiệp phụ / luân lưu nếu có.
 - Đánh giá ngắn gọn màn trình diễn của ${home} và ${away}, chỉ ra những điểm nhấn.
 - Nếu có luân lưu, hãy nhấn mạnh cảm xúc căng thẳng ở loạt sút 11m.
+- Khi kết luận về kết quả, tuyệt đối dựa đúng vào tỉ số ${scoreLine}: nếu tỉ số hòa thì nói rõ là "một trận hòa", không được nói đội nào giành chiến thắng.
 - Cuối kịch bản, gửi lời cảm ơn khán giả và hẹn gặp lại ở trận đấu tiếp theo.
 - Văn phong tự nhiên, tiếng Việt, nói như đang lên sóng, không cần xưng tên BLV.
 - Độ dài khoảng 4–7 đoạn văn ngắn.
