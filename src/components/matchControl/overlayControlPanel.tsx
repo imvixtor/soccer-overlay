@@ -146,6 +146,7 @@ export default function OverlayControlPanel({
         scorebug_enable: true,
         clock_enable: true,
         away_lineup: false,
+        commentary_script: null,
         id: 0,
         user_id: userId,
     };
@@ -338,6 +339,22 @@ export default function OverlayControlPanel({
                         </div>
                     </div>
                 )}
+
+                {/* Kịch bản bình luận từ AI */}
+                <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                        Kịch bản bình luận (AI Gemini)
+                    </p>
+                    <div className="rounded-md border bg-muted/40 p-3 max-h-64 overflow-auto text-sm whitespace-pre-wrap">
+                        {current.commentary_script?.trim()
+                            ? current.commentary_script
+                            : 'Chưa có kịch bản. Khi bạn chuyển phase (trừ Khởi tạo / Chuẩn bị), hệ thống sẽ tự sinh kịch bản bình luận mới bằng AI và hiển thị tại đây.'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Đây là kịch bản gợi ý để bạn đọc trên sóng. Hãy tùy chỉnh lại
+                        cho phù hợp với phong cách cá nhân nếu cần.
+                    </p>
+                </div>
             </CardContent>
         </Card>
     );

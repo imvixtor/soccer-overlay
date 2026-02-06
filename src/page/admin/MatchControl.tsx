@@ -22,6 +22,7 @@ import {
 } from '@/services/matches.api';
 import { supabase } from '@/lib/supabase/client';
 import { upsertOverlayControl } from '@/services/control.api';
+import { generateAndSaveCommentaryScriptForPhase } from '@/services/commentary.api';
 
 const DEFAULT_PHASE: MatchPhase = 'INITIATION';
 
@@ -225,6 +226,7 @@ export default function MatchControlPage() {
                     match_status_enable: false,
                     lineup_enable: false,
                     away_lineup: false,
+                    commentary_script: null,
                 });
                 return;
             }
@@ -305,7 +307,12 @@ export default function MatchControlPage() {
         if (!match?.id || !next || !isPreparationReady) return;
         const { error } = await updateMatchPhase(match.id, next);
         if (!error) {
-            await autoAdjustOverlayForPhase(next);
+            await Promise.all([
+                autoAdjustOverlayForPhase(next),
+                userId
+                    ? generateAndSaveCommentaryScriptForPhase(userId, next)
+                    : Promise.resolve(),
+            ]);
             revalidate();
         }
     };
@@ -314,7 +321,15 @@ export default function MatchControlPage() {
         if (!match?.id) return;
         const { error } = await updateMatchPhase(match.id, 'POST_MATCH');
         if (!error) {
-            await autoAdjustOverlayForPhase('POST_MATCH');
+            await Promise.all([
+                autoAdjustOverlayForPhase('POST_MATCH'),
+                userId
+                    ? generateAndSaveCommentaryScriptForPhase(
+                          userId,
+                          'POST_MATCH',
+                      )
+                    : Promise.resolve(),
+            ]);
             revalidate();
         }
     };
