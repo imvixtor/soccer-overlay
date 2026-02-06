@@ -5,7 +5,6 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
-    CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -120,6 +119,7 @@ export default function OverlayControlPanel({
                 scorebug_enable: true,
                 clock_enable: true,
                 away_lineup: false,
+                commentary_script: null,
             };
 
             const next: OverlayControlRow = {
@@ -161,11 +161,11 @@ export default function OverlayControlPanel({
     const isLineupAwayActive = current.lineup_enable && current.away_lineup;
 
     return (
-        <Card>
+        <Card className="gap-0">
             <CardHeader className="flex flex-row items-start justify-between gap-4 border-b pb-4">
                 <div className="space-y-1">
                     <CardTitle>Điều khiển Overlay</CardTitle>
-                    <CardDescription>
+                    {/* <CardDescription>
                         Bật/tắt nhanh các phần tử overlay. Chỉ được bật{' '}
                         <strong>Trạng thái</strong> hoặc{' '}
                         <strong>Đội hình</strong> tại một thời điểm.
@@ -175,7 +175,7 @@ export default function OverlayControlPanel({
                                 khiển đồng hồ.
                             </span>
                         )}
-                    </CardDescription>
+                    </CardDescription> */}
                 </div>
                 <CardAction className="flex items-center gap-2">
                     {isSaving && <Spinner className="size-4" />}
@@ -349,20 +349,19 @@ export default function OverlayControlPanel({
                 {/* Kịch bản bình luận từ AI */}
                 <div className="space-y-2">
                     <p className="text-sm font-medium">
-                        Kịch bản bình luận (AI Gemini)
+                        Kịch bản bình luận tham khảo
                     </p>
                     <div className="rounded-md border bg-muted/40 p-3 max-h-64 overflow-auto text-sm whitespace-pre-wrap">
-                        {current.commentary_script?.trim() ? (
-                            current.commentary_script
-                        ) : isGeneratingScript ? (
-                            'Đang sinh kịch bản bình luận bằng AI… Vui lòng chờ trong giây lát.'
-                        ) : (
-                            'Chưa có kịch bản. Khi bạn chuyển phase (trừ Khởi tạo / Chuẩn bị), hệ thống sẽ tự sinh kịch bản bình luận mới bằng AI và hiển thị tại đây.'
-                        )}
+                        {current.commentary_script?.trim()
+                            ? current.commentary_script
+                            : isGeneratingScript
+                              ? 'Đang sinh kịch bản bình luận bằng AI… Vui lòng chờ trong giây lát.'
+                              : 'Chưa có kịch bản. Khi bạn chuyển phase (trừ Khởi tạo / Chuẩn bị), hệ thống sẽ tự sinh kịch bản bình luận mới bằng AI và hiển thị tại đây.'}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Đây là kịch bản gợi ý để bạn đọc trên sóng. Hãy tùy chỉnh lại
-                        cho phù hợp với phong cách cá nhân nếu cần.
+                        Đây là kịch bản gợi ý dựa trên AI, hãy tùy chỉnh lại cho
+                        phù hợp với phong cách cá nhân và bối cảnh, diễn biến
+                        thực tế.
                     </p>
                 </div>
             </CardContent>
