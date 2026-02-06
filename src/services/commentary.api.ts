@@ -221,12 +221,51 @@ Hãy viết kịch bản tổng kết NGHỈ GIỮA HIỆP cho trận đấu:
 - Văn phong tự nhiên, tiếng Việt, dễ đọc, không dùng gạch đầu dòng, chỉ dùng đoạn văn.
 - Độ dài khoảng 3–6 đoạn văn ngắn.
 `;
-    } else if (phase === 'FULLTIME' || phase === 'POST_MATCH') {
-        taskInstruction = `
+    } else if (phase === 'FULLTIME') {
+        // FULLTIME có thể là:
+        // - Kết thúc luôn trận đấu (không hiệp phụ, không pen) => tổng kết trận
+        // - Hoặc chỉ là kết thúc hiệp 2, chuẩn bị hiệp phụ / pen
+        const noExtraTime = extraDuration === 0;
+        const noPenalty = !hasPenaltyShootout;
+
+        if (noExtraTime && noPenalty) {
+            // Trận kết thúc sau 2 hiệp chính
+            taskInstruction = `
 Bạn là BLV bóng đá chuyên nghiệp trên sóng truyền hình Việt Nam.
 Hãy viết kịch bản TỔNG KẾT TRẬN ĐẤU khi trận đấu đã khép lại:
 - Nhắc lại tỉ số chung cuộc ${scoreLine}${penaltyLine}.
 - Tóm tắt mạch diễn biến chính của trận: những bàn thắng quan trọng, bước ngoặt, thẻ phạt.
+- Đánh giá ngắn gọn màn trình diễn của ${home} và ${away}, chỉ ra những điểm nhấn.
+- Cuối kịch bản, gửi lời cảm ơn khán giả và hẹn gặp lại ở trận đấu tiếp theo.
+- Văn phong tự nhiên, tiếng Việt, nói như đang lên sóng, không cần xưng tên BLV.
+- Độ dài khoảng 4–7 đoạn văn ngắn.
+`;
+        } else {
+            // Có hiệp phụ và/hoặc pen: FULLTIME chỉ là hết hiệp 2
+            const nextStageDescription =
+                !noExtraTime && hasPenaltyShootout
+                    ? 'chúng ta chuẩn bị bước vào hiệp phụ, và nếu vẫn hòa sẽ đến loạt sút luân lưu 11m'
+                    : !noExtraTime
+                      ? 'chúng ta chuẩn bị bước vào hiệp phụ'
+                      : 'chúng ta chuẩn bị bước vào loạt sút luân lưu 11m';
+
+            taskInstruction = `
+Bạn là BLV bóng đá chuyên nghiệp trên sóng truyền hình Việt Nam.
+Hãy viết kịch bản NGHỈ GIỮA TRẬN sau khi hiệp 2 kết thúc (trận CHƯA khép lại):
+- Mở đầu bằng việc nhắc lại tỉ số hiện tại ${scoreLine}${penaltyLine} sau 90 phút chính thức.
+- Tóm tắt ngắn gọn diễn biến 2 hiệp chính: những bàn thắng quan trọng, cơ hội, thẻ phạt, bước ngoặt.
+- Phân tích nhanh tương quan lực lượng, thể lực và tinh thần của hai đội trước khi bước vào giai đoạn tiếp theo.
+- Kết luận bằng việc dẫn dắt: ${nextStageDescription}.
+- Văn phong tự nhiên, tiếng Việt, dễ đọc, không dùng gạch đầu dòng khi viết kịch bản, chỉ dùng đoạn văn.
+- Độ dài khoảng 3–5 đoạn văn ngắn.
+`;
+        }
+    } else if (phase === 'POST_MATCH') {
+        taskInstruction = `
+Bạn là BLV bóng đá chuyên nghiệp trên sóng truyền hình Việt Nam.
+Hãy viết kịch bản TỔNG KẾT TRẬN ĐẤU khi trận đấu đã khép lại hoàn toàn:
+- Nhắc lại tỉ số chung cuộc ${scoreLine}${penaltyLine}.
+- Tóm tắt mạch diễn biến chính của trận: những bàn thắng quan trọng, bước ngoặt, thẻ phạt, bao gồm cả hiệp phụ / luân lưu nếu có.
 - Đánh giá ngắn gọn màn trình diễn của ${home} và ${away}, chỉ ra những điểm nhấn.
 - Nếu có luân lưu, hãy nhấn mạnh cảm xúc căng thẳng ở loạt sút 11m.
 - Cuối kịch bản, gửi lời cảm ơn khán giả và hẹn gặp lại ở trận đấu tiếp theo.
@@ -331,10 +370,21 @@ export async function generateAndSaveCommentaryScriptForPhase(
         if (eventsRes.error) throw eventsRes.error;
         if (playersRes.error) throw playersRes.error;
 
+        const config = configRes.data;
+
+        // Nếu trận không có hiệp phụ và không có luân lưu:
+        // - FULLTIME đã đóng vai trò tổng kết trận
+        // - POST_MATCH khi này chỉ là "nhãn" kỹ thuật => không cần sinh thêm kịch bản
+        const noExtraTime = (config?.extra_duration ?? 0) === 0;
+        const noPenalty = !(config?.has_penalty_shootout ?? false);
+        if (phase === 'POST_MATCH' && noExtraTime && noPenalty) {
+            return;
+        }
+
         const prompt = buildPrompt({
             phase,
             match,
-            matchConfig: configRes.data,
+            matchConfig: config,
             events: eventsRes.data,
             players: (playersRes.data ?? []) as PromptPlayer[],
         });
