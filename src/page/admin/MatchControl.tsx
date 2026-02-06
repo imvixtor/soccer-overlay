@@ -192,16 +192,51 @@ export default function MatchControlPage() {
     const extraDuration = matchConfig?.extra_duration ?? 0;
     const hasPenaltyShootout = matchConfig?.has_penalty_shootout ?? false;
     const phase = match?.phase ?? DEFAULT_PHASE;
+
+    const getNextPhaseConsideringScore = (): MatchPhase | null => {
+        if (!match) return null;
+
+        const homeScore = match.home_score;
+        const awayScore = match.away_score;
+
+        // Khi hết hiệp 2 (FULLTIME):
+        // - Nếu hòa:
+        //   + Có hiệp phụ => sang EXTIME_FIRST_HALF
+        //   + Không hiệp phụ nhưng có pen => sang PENALTY_SHOOTOUT
+        //   + Không hiệp phụ, không pen => sang POST_MATCH (kết thúc)
+        // - Nếu không hòa => sang POST_MATCH
+        if (phase === 'FULLTIME') {
+            if (homeScore === awayScore) {
+                if (extraDuration > 0) return 'EXTIME_FIRST_HALF';
+                if (hasPenaltyShootout) return 'PENALTY_SHOOTOUT';
+                return 'POST_MATCH';
+            }
+            return 'POST_MATCH';
+        }
+
+        // Khi hết hiệp phụ 2:
+        // - Nếu hòa:
+        //   + Có pen => sang PENALTY_SHOOTOUT
+        //   + Không pen => sang POST_MATCH
+        // - Nếu không hòa => sang POST_MATCH
+        if (phase === 'EXTIME_SECOND_HALF') {
+            if (homeScore === awayScore) {
+                if (hasPenaltyShootout) return 'PENALTY_SHOOTOUT';
+                return 'POST_MATCH';
+            }
+            return 'POST_MATCH';
+        }
+
+        // Các phase còn lại dùng logic mặc định theo config
+        return getNextPhaseWithConfig(phase, extraDuration, hasPenaltyShootout);
+    };
+
     const breadcrumbPhases = getBreadcrumbPhasesWithConfig(
         phase,
         extraDuration,
         hasPenaltyShootout,
     );
-    const next = getNextPhaseWithConfig(
-        phase,
-        extraDuration,
-        hasPenaltyShootout,
-    );
+    const next = getNextPhaseConsideringScore();
 
     const playersPerTeam = matchConfig?.players_per_team ?? 11;
     const isPreparationReady =
@@ -306,13 +341,19 @@ export default function MatchControlPage() {
     };
 
     const handleNextPhase = async () => {
-        if (!match?.id || !next || !isPreparationReady) return;
-        const { error } = await updateMatchPhase(match.id, next);
+        if (!match?.id || !isPreparationReady) return;
+        const targetPhase = getNextPhaseConsideringScore();
+        if (!targetPhase) return;
+
+        const { error } = await updateMatchPhase(match.id, targetPhase);
         if (!error) {
-            await autoAdjustOverlayForPhase(next);
+            await autoAdjustOverlayForPhase(targetPhase);
             // Sinh kịch bản bình luận ở nền, không chặn chuyển phase
             if (userId) {
-                void generateAndSaveCommentaryScriptForPhase(userId, next);
+                void generateAndSaveCommentaryScriptForPhase(
+                    userId,
+                    targetPhase,
+                );
             }
             revalidate();
         }
